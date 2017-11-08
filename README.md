@@ -8,11 +8,9 @@ the mxnet unoffical version  Feature Pyramid Network: https://github.com/unsky/F
 dowload VGG16 `VGG16.v2.caffemodel` and your dataset
 ### make caffe
 ```
-cd FP-caffe
-mkdir build
-cd build
-cmake ..
-make -j16 all
+cd caffe-FP_Net
+make -j8 && make pycaffe
+
 ```
 ### make lib
 
