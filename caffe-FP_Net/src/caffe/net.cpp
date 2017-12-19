@@ -832,7 +832,6 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
             << target_blobs[j]->shape_string() << ". "
             << "To learn this layer's parameters from scratch rather than "
             << "copying from a saved net, rename the layer.";
-
       }
       const bool kReshape = false;
       target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);

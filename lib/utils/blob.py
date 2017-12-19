@@ -28,7 +28,7 @@ def im_list_to_blob(ims):
     blob = blob.transpose(channel_swap)
     return blob
 
-def prep_im_for_blob(im, pixel_means, target_size, max_size):
+def prep_im_for_blob(im, pixel_means, target_size, max_size,stride):
     """Mean subtract and scale an image for use in a blob."""
     im = im.astype(np.float32, copy=False)
     im -= pixel_means
@@ -41,5 +41,14 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
         im_scale = float(max_size) / float(im_size_max)
     im = cv2.resize(im, None, None, fx=im_scale, fy=im_scale,
                     interpolation=cv2.INTER_LINEAR)
+    if stride == 0:
+        return im, im_scale
+    else:
+        # pad to product of stride
+        im_height = int(np.ceil(im.shape[0] / float(stride)) * stride)
+        im_width = int(np.ceil(im.shape[1] / float(stride)) * stride)
+        im_channel = im.shape[2]
+        padded_im = np.zeros((im_height, im_width, im_channel))
+        padded_im[:im.shape[0], :im.shape[1], :] = im
+        return padded_im, im_scale
 
-    return im, im_scale

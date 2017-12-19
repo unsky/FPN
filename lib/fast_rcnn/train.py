@@ -153,6 +153,7 @@ def train_net(solver_prototxt, roidb, output_dir,
     """Train a Fast R-CNN network."""
 
     roidb = filter_roidb(roidb)
+  
     sw = SolverWrapper(solver_prototxt, roidb, output_dir,
                        pretrained_model=pretrained_model)
 

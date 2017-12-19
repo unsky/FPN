@@ -8,6 +8,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/deformable_conv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
 #include "caffe/layers/relu_layer.hpp"
@@ -69,8 +70,29 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }
 }
-
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
+
+
+
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetDeformableConvolutionLayer(
+    const LayerParameter& param) {
+  DeformableConvolutionParameter defor_conv_param = param.deformable_convolution_param();
+  DeformableConvolutionParameter_Engine engine = defor_conv_param.engine();
+
+  if (engine == DeformableConvolutionParameter_Engine_DEFAULT) {
+    engine = DeformableConvolutionParameter_Engine_CAFFE;
+  }
+  if (engine == DeformableConvolutionParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new DeformableConvolutionLayer<Dtype>(param));
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+  }
+}
+
+REGISTER_LAYER_CREATOR(DeformableConvolution, GetDeformableConvolutionLayer);
+
+
 
 // Get pooling layer according to engine.
 template <typename Dtype>

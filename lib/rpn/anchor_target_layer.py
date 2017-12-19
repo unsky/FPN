@@ -26,18 +26,10 @@ class AnchorTargetLayer(caffe.Layer):
     def setup(self, bottom, top):
         layer_params = yaml.load(self.param_str_)
         self._feat_stride = layer_params['feat_stride']
-        p = int(np.log2(self._feat_stride) + 1)
-        if p == 5:
-            anchor_scales = layer_params.get('scales', (8,16, 32 ))
-        if p == 4:
-            anchor_scales = layer_params.get('scales', (4,8,16))
-        if p == 3:
-            anchor_scales = layer_params.get('scales',(2,4,8))
-        if p == 2:
-            anchor_scales = layer_params.get('scales',(1,2,4))
-
+        self._scales = 2 ** np.arange(3,4)
+        self._ratios = [0.5,1,2]
         #anchor_scales = layer_params.get('scales', (8, ))
-        self._anchors = generate_anchors(scales=np.array(anchor_scales))
+        self._anchors = generate_anchors(base_size=self._feat_stride, ratios=self._ratios, scales=self._scales)
 
         self._num_anchors = self._anchors.shape[0]
         
@@ -58,7 +50,7 @@ class AnchorTargetLayer(caffe.Layer):
             self._count = 0
 
         # allow boxes to sit over the edge by a small amount
-        self._allowed_border = layer_params.get('allowed_border', 0)
+        self._allowed_border = layer_params.get('allowed_border', 1000)
 
         height, width = bottom[0].data.shape[-2:]
         if DEBUG:
@@ -77,59 +69,23 @@ class AnchorTargetLayer(caffe.Layer):
 
     def forward(self, bottom, top):
 
-        # Algorithm:
-        #
-        # for each (H, W) location i
-        #   generate 9 anchor boxes centered on cell i
-        #   apply predicted bbox deltas at cell i to each of the 9 anchors
-        # filter out-of-image anchors
-        # measure GT overlap
-
         assert bottom[0].data.shape[0] == 1, \
             'Only single item batches are supported'
 
         # map of shape (..., H, W)
-        #assgin the gt_box
         height, width = bottom[0].data.shape[-2:]
         # GT boxes (x1, y1, x2, y2, label)
         gt_boxes = bottom[1].data
-        k0 = 4
-        min_k=2
-        max_k=5
-        if gt_boxes.size > 0:
-            layer_ids = np.zeros((gt_boxes.shape[0], ), dtype=np.int32)
-            ws = gt_boxes[:, 2] - gt_boxes[:, 0]
-            hs = gt_boxes[:, 3] - gt_boxes[:, 1]
-            areas = ws * hs
-            k = np.floor(k0 + np.log2(np.sqrt(areas)*1.0 / 64))
-
-            inds = np.where(k < min_k)[0]
-            k[inds] = min_k
-            inds = np.where(k > max_k)[0]
-            k[inds] = max_k
-
-        
-        p = int(np.log2(self._feat_stride) + 1)
-
-        gt = []
-        for index,item in enumerate(k):
-            if int(item)==p:
-                gt.append(gt_boxes[index])
-        gt = np.array(gt)
-        gt_boxes = gt
-
-  
-      
         # im_info
         im_info = bottom[2].data[0, :]
-     
-       
-        # print ''
-        # print 'im_size: ({}, {})'.format(im_info[0], im_info[1])
-        # print 'scale: {}'.format(im_info[2])
 
-        # print 'rpn: gt_boxes.shape', gt_boxes.shape
-        # print 'rpn: gt_boxes', gt_boxes
+        if DEBUG:
+            print ''
+            print 'im_size: ({}, {})'.format(im_info[0], im_info[1])
+            print 'scale: {}'.format(im_info[2])
+            print 'height, width: ({}, {})'.format(height, width)
+            print 'rpn: gt_boxes.shape', gt_boxes.shape
+            print 'rpn: gt_boxes', gt_boxes
 
         # 1. Generate proposals from bbox deltas and shifted anchors
         shift_x = np.arange(0, width) * self._feat_stride
@@ -162,50 +118,47 @@ class AnchorTargetLayer(caffe.Layer):
 
         # keep only inside anchors
         anchors = all_anchors[inds_inside, :]
-        
-
+        if DEBUG:
+            print 'anchors.shape', anchors.shape
 
         # label: 1 is positive, 0 is negative, -1 is dont care
         labels = np.empty((len(inds_inside), ), dtype=np.float32)
         labels.fill(-1)
-         # overlaps between the anchors and the gt boxes
+
+        # overlaps between the anchors and the gt boxes
         # overlaps (ex, gt)
-        if gt_boxes.size > 0:
-            overlaps = bbox_overlaps(
-                 np.ascontiguousarray(anchors, dtype=np.float),
-                 np.ascontiguousarray(gt_boxes, dtype=np.float))
-            argmax_overlaps = overlaps.argmax(axis=1)
-            max_overlaps = overlaps[np.arange(len(inds_inside)), argmax_overlaps]
-            gt_argmax_overlaps = overlaps.argmax(axis=0)
-            gt_max_overlaps = overlaps[gt_argmax_overlaps,
+        overlaps = bbox_overlaps(
+            np.ascontiguousarray(anchors, dtype=np.float),
+            np.ascontiguousarray(gt_boxes, dtype=np.float))
+        argmax_overlaps = overlaps.argmax(axis=1)
+        max_overlaps = overlaps[np.arange(len(inds_inside)), argmax_overlaps]
+        gt_argmax_overlaps = overlaps.argmax(axis=0)
+        gt_max_overlaps = overlaps[gt_argmax_overlaps,
                                    np.arange(overlaps.shape[1])]
-            gt_argmax_overlaps = np.where(overlaps == gt_max_overlaps)[0]
+        gt_argmax_overlaps = np.where(overlaps == gt_max_overlaps)[0]
 
-            if not cfg.TRAIN.RPN_CLOBBER_POSITIVES:
+        if not cfg.TRAIN.RPN_CLOBBER_POSITIVES:
             # assign bg labels first so that positive labels can clobber them
-                  labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
+            labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
 
-            # fg label: for each gt, anchor with highest overlap
-            labels[gt_argmax_overlaps] = 1
+        # fg label: for each gt, anchor with highest overlap
+        labels[gt_argmax_overlaps] = 1
 
-            # fg label: above threshold IOU
-            labels[max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
+        # fg label: above threshold IOU
+        labels[max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
 
-            if cfg.TRAIN.RPN_CLOBBER_POSITIVES:
+        if cfg.TRAIN.RPN_CLOBBER_POSITIVES:
             # assign bg labels last so that negative labels can clobber positives
-                 labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
-
+            labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
 
         # subsample positive labels if we have too many
-            num_fg = int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
-            fg_inds = np.where(labels == 1)[0]
-        
-            if len(fg_inds) > num_fg:
-                disable_inds = npr.choice(
-                   fg_inds, size=(len(fg_inds) - num_fg), replace=False)
-                labels[disable_inds] = -1
-        else:
-            labels[:]=0
+        num_fg = int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
+        fg_inds = np.where(labels == 1)[0]
+        if len(fg_inds) > num_fg:
+            disable_inds = npr.choice(
+                fg_inds, size=(len(fg_inds) - num_fg), replace=False)
+            labels[disable_inds] = -1
+
         # subsample negative labels if we have too many
         num_bg = cfg.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
         bg_inds = np.where(labels == 0)[0]
@@ -217,8 +170,7 @@ class AnchorTargetLayer(caffe.Layer):
                 #len(bg_inds), len(disable_inds), np.sum(labels == 0))
 
         bbox_targets = np.zeros((len(inds_inside), 4), dtype=np.float32)
-        if gt_boxes.size > 0:
-            bbox_targets = _compute_targets(anchors, gt_boxes[argmax_overlaps, :])
+        bbox_targets = _compute_targets(anchors, gt_boxes[argmax_overlaps, :])
 
         bbox_inside_weights = np.zeros((len(inds_inside), 4), dtype=np.float32)
         bbox_inside_weights[labels == 1, :] = np.array(cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS)

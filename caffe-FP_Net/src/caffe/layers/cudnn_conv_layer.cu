@@ -43,7 +43,6 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();	
 
-
 }
 
   }

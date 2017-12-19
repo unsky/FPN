@@ -1,11 +1,12 @@
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 #include "caffe/filler.hpp"
 #include "caffe/layers/base_conv_layer.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
-
+using namespace std;
 namespace caffe {
 
 template <typename Dtype>
@@ -185,6 +186,8 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+        
+
   const int first_spatial_axis = channel_axis_ + 1;
   CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
       << "bottom num_axes may not change.";
@@ -326,11 +329,16 @@ template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) {
   const Dtype* col_buff = input;
+
+
+   //cout<<"col_buffer:"<<col_buffer_.shape_string()<<endl;
+  
   if (!is_1x1_) {
     if (!skip_im2col) {
       conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
     }
     col_buff = col_buffer_.gpu_data();
+    
   }
   for (int g = 0; g < group_; ++g) {
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /

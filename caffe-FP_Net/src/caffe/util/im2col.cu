@@ -1,8 +1,8 @@
 #include <algorithm>
-
+#include <iostream>
 #include "caffe/common.hpp"
 #include "caffe/util/im2col.hpp"
-
+using namespace std;
 namespace caffe {
 
 template <typename Dtype>
@@ -14,17 +14,17 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
     const int height_col, const int width_col,
     Dtype* data_col) {
   CUDA_KERNEL_LOOP(index, n) {
-    const int h_index = index / width_col;
-    const int h_col = h_index % height_col;
-    const int w_col = index % width_col;
-    const int c_im = h_index / height_col;
-    const int c_col = c_im * kernel_h * kernel_w;
-    const int h_offset = h_col * stride_h - pad_h;
-    const int w_offset = w_col * stride_w - pad_w;
+    const int h_index = index / width_col;//0
+    const int h_col = h_index % height_col;//0
+    const int w_col = index % width_col;//0
+    const int c_im = h_index / height_col;//0
+    const int c_col = c_im * kernel_h * kernel_w;//0
+    const int h_offset = h_col * stride_h - pad_h;//0
+    const int w_offset = w_col * stride_w - pad_w;//0
     Dtype* data_col_ptr = data_col;
-    data_col_ptr += (c_col * height_col + h_col) * width_col + w_col;
+    data_col_ptr += (c_col * height_col + h_col) * width_col + w_col;//0
     const Dtype* data_im_ptr = data_im;
-    data_im_ptr += (c_im * height + h_offset) * width + w_offset;
+    data_im_ptr += (c_im * height + h_offset) * width + w_offset;//0
     for (int i = 0; i < kernel_h; ++i) {
       for (int j = 0; j < kernel_w; ++j) {
         int h_im = h_offset + i * dilation_h;
@@ -52,6 +52,25 @@ void im2col_gpu(const Dtype* data_im, const int channels,
   int width_col = (width + 2 * pad_w -
       (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
   int num_kernels = channels * height_col * width_col;
+  // cout<<"height_col: "<<height_col<<endl;
+  // cout<<"width_col: "<<width_col<<endl;
+  // cout<<"num_kernels: "<<num_kernels<<endl;
+  // cout<<"height: "<<height<<endl;
+  // cout<<"width: "<<width<<endl;
+  // cout<<"kernel_h: "<<kernel_h<<endl;
+  // cout<< "kernel_w: "<<kernel_w<<endl;
+  // cout<<"pad_h: "<<pad_h<<endl;
+  // cout<<"pad_w: "<<pad_w<<endl;
+  // cout<<"stride_h: "<<stride_h<<endl;
+  // cout<<"stride_w: "<<stride_w<<endl;
+  // cout<<"dilation_h: "<<dilation_h<<endl;
+  // cout<<"dilation_w: "<<dilation_h<<endl;
+
+   
+  // cout<<"threads: "<<CAFFE_CUDA_NUM_THREADS<<" "<<endl;
+  // cout<<"CAFFE_GET_BLOCKS(num_kernels): "<< CAFFE_GET_BLOCKS(num_kernels)<<endl;
+
+
   // NOLINT_NEXT_LINE(whitespace/operators)
   im2col_gpu_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels),
                              CAFFE_CUDA_NUM_THREADS>>>(

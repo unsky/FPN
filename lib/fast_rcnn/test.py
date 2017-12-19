@@ -36,7 +36,7 @@ def _get_image_blob(im):
     im_shape = im_orig.shape
     im_size_min = np.min(im_shape[0:2])
     im_size_max = np.max(im_shape[0:2])
-
+    stride = cfg.TRAIN.IMAGE_STRIDE
     processed_ims = []
     im_scale_factors = []
 
@@ -47,8 +47,18 @@ def _get_image_blob(im):
             im_scale = float(cfg.TEST.MAX_SIZE) / float(im_size_max)
         im = cv2.resize(im_orig, None, None, fx=im_scale, fy=im_scale,
                         interpolation=cv2.INTER_LINEAR)
-        im_scale_factors.append(im_scale)
-        processed_ims.append(im)
+        if stride == 0:
+            im_scale_factors.append(im_scale)
+            processed_ims.append(im)
+        else:
+            # pad to product of stride
+            im_height = int(np.ceil(im.shape[0] / float(stride)) * stride)
+            im_width = int(np.ceil(im.shape[1] / float(stride)) * stride)
+            im_channel = im.shape[2]
+            padded_im = np.zeros((im_height, im_width, im_channel))
+            padded_im[:im.shape[0], :im.shape[1], :] = im
+            im_scale_factors.append(im_scale)
+            processed_ims.append(padded_im)
 
     # Create a blob to hold the input images
     blob = im_list_to_blob(processed_ims)
@@ -155,11 +165,7 @@ def im_detect(net, im, boxes=None):
 
     if cfg.TEST.HAS_RPN:
         assert len(im_scales) == 1, "Only single-image batch implemented"
-        rois2 = net.blobs['rpn_rois/p2'].data.copy()
-        rois3 = net.blobs['rpn_rois/p3'].data.copy()
-        rois4 = net.blobs['rpn_rois/p4'].data.copy()
-        rois5 = net.blobs['rpn_rois/p5'].data.copy()
-        rois =  np.vstack((rois2,rois3,rois4, rois5))
+        rois = net.blobs['rois'].data.copy()
         # unscale back to raw image space
         boxes = rois[:, 1:5] / im_scales[0]
 

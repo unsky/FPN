@@ -8,6 +8,15 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
+  // cout<<"--------------------------------------"<<endl;
+  // cout<<"caffe caffe layer："<<endl;
+  // cout<<"bottom[0] shape: "<<bottom[0]->shape_string()<<endl;
+  // cout<<"weight shape: "<<this->blobs_[0]->shape_string()<<endl; 
+  // cout<<"top[0] shape： "<<top[0]->shape_string()<<endl;
+
+  // cout<<"bottom_dim_: "<<this->bottom_dim_<<endl;
+  // cout<<"top_dim_: "<<this->top_dim_<<endl;
+
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
@@ -19,7 +28,9 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
       }
     }
+
   }
+
 }
 
 template <typename Dtype>
@@ -27,6 +38,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
+
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
     // Bias gradient, if necessary.
@@ -36,7 +48,8 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->backward_gpu_bias(bias_diff, top_diff + n * this->top_dim_);
       }
     }
-    if (this->param_propagate_down_[0] || propagate_down[i]) {
+
+  if (this->param_propagate_down_[0] || propagate_down[i]) {
       const Dtype* bottom_data = bottom[i]->gpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
       for (int n = 0; n < this->num_; ++n) {

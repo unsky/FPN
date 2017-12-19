@@ -1,10 +1,11 @@
 #!/usr/bin/env sh
 # This script converts the mnist data into lmdb/leveldb format,
 # depending on the value assigned to $BACKEND.
+set -e
 
-EXAMPLE=/home/ubuntu/Work/brbchen/unskychen/FP_Net/caffe-FP_Net/examples/mnist
-DATA=/home/ubuntu/Work/brbchen/unskychen/FP_Net/caffe-FP_Net/data/mnist
-BUILD=/home/ubuntu/Work/brbchen/unskychen/FP_Net/caffe-FP_Net/build/examples/mnist
+EXAMPLE=examples/mnist
+DATA=data/mnist
+BUILD=build/examples/mnist
 
 BACKEND="lmdb"
 

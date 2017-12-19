@@ -31,6 +31,7 @@ void ScaleLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int count = top[0]->count();
   const Dtype* bottom_data = bottom[0]->gpu_data();
+ 
   if (bottom[0] == top[0]) {
     // in-place computation; need to store bottom data before overwriting it.
     // Note that this is only necessary for Backward; we could skip this if not

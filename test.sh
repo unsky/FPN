@@ -46,7 +46,7 @@ esac
 
 
 
-NET_FINAL="./output/FP_Net_end2end/voc_2007_trainval/fpn_iter_25000.caffemodel"
+NET_FINAL="./data/pretrained_model/ResNet50.v2.caffemodel"
 
 
 time ./tools/test_net.py --gpu ${GPU_ID} \

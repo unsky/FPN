@@ -33,7 +33,6 @@ import numpy as np
 #       [ -35.,  -79.,   52.,   96.],
 #       [ -79., -167.,   96.,  184.],
 #       [-167., -343.,  184.,  360.]])
-
 def generate_anchors(base_size=8, ratios=[0.5, 1, 2],
                      scales=2 ** np.arange(3, 6)):
     """

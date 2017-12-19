@@ -24,108 +24,68 @@ class ProposalTargetLayer(caffe.Layer):
     def setup(self, bottom, top):
         layer_params = yaml.load(self.param_str_)
         self._num_classes = layer_params['num_classes']
+        self._batch_rois = cfg.TRAIN.BATCH_SIZE
 
         # sampled rois (0, x1, y1, x2, y2)
         top[0].reshape(1, 5)
         top[1].reshape(1, 5)
         top[2].reshape(1, 5)
+        top[3].reshape(1, 5)
         # labels
-        top[3].reshape(1, 1)
+        top[4].reshape(1, 1)
         # bbox_targets
-        top[4].reshape(1, self._num_classes * 4)
-        # bbox_inside_weights
         top[5].reshape(1, self._num_classes * 4)
-        # bbox_outside_weights
+        # bbox_inside_weights
         top[6].reshape(1, self._num_classes * 4)
+        # bbox_outside_weights
+        top[7].reshape(1, self._num_classes * 4)
 
     def forward(self, bottom, top):
         # Proposal ROIs (0, x1, y1, x2, y2) coming from RPN
         # (i.e., rpn.proposal_layer.ProposalLayer), or any other source
-        p2_rois = bottom[0].data
-        p3_rois = bottom[1].data
-        p4_rois = bottom[2].data
-        p5_rois = bottom[3].data
-
+        all_rois = bottom[0].data
         # GT boxes (x1, y1, x2, y2, label)
         # TODO(rbg): it's annoying that sometimes I have extra info before
         # and other times after box coordinates -- normalize to one format
-        gt_boxes = bottom[4].data
-
+        gt_boxes = bottom[1].data
         # Include ground-truth boxes in the set of candidate rois
         zeros = np.zeros((gt_boxes.shape[0], 1), dtype=gt_boxes.dtype)
-
-
-
-        ################################################
-        p2_rois = np.vstack(
-            (p2_rois, np.hstack((zeros, gt_boxes[:, :-1])))
+        all_rois = np.vstack(
+            (all_rois, np.hstack((zeros, gt_boxes[:, :-1])))
         )
-        p3_rois = np.vstack(
-            (p3_rois, np.hstack((zeros, gt_boxes[:, :-1])))
-        )       
-        p4_rois = np.vstack(
-            (p4_rois, np.hstack((zeros, gt_boxes[:, :-1])))
-        )
-        p5_rois = np.vstack(
-            (p5_rois, np.hstack((zeros, gt_boxes[:, :-1])))
-        )
-        #################################################
-        assert np.all(p2_rois[:, 0] == 0), \
-                'Only single item batches are supported'
-        assert np.all(p3_rois[:, 0] == 0), \
-                'Only single item batches are supported'
-        assert np.all(p4_rois[:, 0] == 0), \
-                'Only single item batches are supported'
-        assert np.all(p5_rois[:, 0] == 0), \
-                'Only single item batches are supported'
+        
         num_images = 1
         rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
         fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
 
-        ####################################################
-        labels_p2, rois_p2, bbox_targets_p2, bbox_inside_weights_p2 = _sample_rois(
-            p2_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, self._num_classes)
+        rois, labels, bbox_targets, bbox_weights ,layer_indexs = _sample_rois(
+            all_rois, gt_boxes, fg_rois_per_image,
+            rois_per_image, self._num_classes,sample_type='fpn', k0 = 4)
 
-        labels_p3, rois_p3, bbox_targets_p3, bbox_inside_weights_p3 = _sample_rois(
-            p3_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, self._num_classes)
+        rois_ = np.zeros((self._batch_rois*4, 5), dtype=rois.dtype)
+        labels_all = np.ones((self._batch_rois*4, ), dtype=labels.dtype)*-1
+        bbox_targets_all = np.zeros((self._batch_rois*4, self._num_classes * 4), dtype=bbox_targets.dtype)
+        bbox_weights_all = np.zeros((self._batch_rois*4, self._num_classes * 4), dtype=bbox_weights.dtype)
+        rois_all =[]
+        for i in range(4):
+            index = (layer_indexs == (i + 2))
+            num_index = sum(index)
+            start = self._batch_rois*i
+            end = start+num_index
+            index_range = range(start, end)
+            rois_[index_range, :] = rois[index, :]
+            rois_all.append(rois_[range(start,start + self._batch_rois), :])
+            labels_all[index_range] = labels[index]  
+            bbox_targets_all[index_range,:] = bbox_targets[index, :]
+            bbox_weights_all[index_range,:] = bbox_weights[index, :]
 
-        labels_p4, rois_p4, bbox_targets_p4, bbox_inside_weights_p4 = _sample_rois(
-            p4_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, self._num_classes)
 
-        labels_p5, rois_p5, bbox_targets_p5, bbox_inside_weights_p5 = _sample_rois(
-            p5_rois, gt_boxes, fg_rois_per_image,
-            rois_per_image, self._num_classes)
-        ####################################################
-
-        
-    
+        rois_p2 = rois_all[0]
+        rois_p3 = rois_all[1]
+        rois_p4 = rois_all[2]
+        rois_p5 = rois_all[3]       
 
 
-        ####################################################
-        labels = []
-        labels = labels_p2.tolist() + labels_p3.tolist() + labels_p4.tolist() + labels_p5.tolist()
-        labels = np.array(labels)
-        bbox_targets = np.vstack((bbox_targets_p2,bbox_targets_p3,bbox_targets_p4,bbox_targets_p5))
-
-        bbox_inside_weights = np.vstack((bbox_inside_weights_p2,bbox_inside_weights_p3,bbox_inside_weights_p4,bbox_inside_weights_p5))
-        outside_weight_p2 = np.array(bbox_inside_weights_p2 > 0).astype(np.float32)
-        outside_weight_p3 = np.array(bbox_inside_weights_p3 > 0).astype(np.float32)
-        outside_weight_p4 = np.array(bbox_inside_weights_p4 > 0).astype(np.float32)     
-        outside_weight_p5 = np.array(bbox_inside_weights_p5 > 0).astype(np.float32)        
-        bbox_outside_weights = np.vstack((outside_weight_p2,outside_weight_p3,outside_weight_p4, outside_weight_p5))
-        ######################################################
-        # sampled rois
-        # print labels
-        # print len(labels),len(bbox_targets),len(bbox_inside_weights),len(bbox_outside_weights)
-        # print len(rois_p2),len(rois_p3),len(rois_p4),len(rois_p5)
-        # print len(labels_p2),len(labels_p3),len(labels_p4),len(labels_p5)
-        # print len(bbox_inside_weights_p2),len(bbox_inside_weights_p3),len(bbox_inside_weights_p4),len(bbox_inside_weights_p5)
-        # print len(outside_weight_p2),len(outside_weight_p3),len(outside_weight_p4),len(outside_weight_p5)
-        # print len(labels[np.where(labels > 0)]),len(labels_p2[np.where(labels_p2 > 0)]),len(labels_p3[np.where(labels_p3 > 0)]),len(labels_p4[np.where(labels_p4 > 0)]),len(labels_p5[np.where(labels_p5 > 0)])
-   
         top[0].reshape(*rois_p2.shape)
         top[0].data[...] = rois_p2
     
@@ -137,21 +97,22 @@ class ProposalTargetLayer(caffe.Layer):
         
         top[3].reshape(*rois_p5.shape)
         top[3].data[...] = rois_p5
+        
         # classification labels
-        top[4].reshape(*labels.shape)
-        top[4].data[...] = labels
+        top[4].reshape(*labels_all.shape)
+        top[4].data[...] = labels_all
 
         # bbox_targets
-        top[5].reshape(*bbox_targets.shape)
-        top[5].data[...] = bbox_targets
+        top[5].reshape(*bbox_targets_all.shape)
+        top[5].data[...] = bbox_targets_all
 
         # bbox_inside_weights
-        top[6].reshape(*bbox_inside_weights.shape)
-        top[6].data[...] = bbox_inside_weights
+        top[6].reshape(*bbox_targets_all.shape)
+        top[6].data[...] = bbox_targets_all
 
         # bbox_outside_weights
-        top[7].reshape(*bbox_outside_weights.shape)
-        top[7].data[...] = bbox_outside_weights
+        top[7].reshape(*bbox_targets_all.shape)
+        top[7].data[...] = np.array(bbox_targets_all > 0).astype(np.float32)
       
 
     def backward(self, top, propagate_down, bottom):
@@ -203,7 +164,7 @@ def _compute_targets(ex_rois, gt_rois, labels):
     return np.hstack(
             (labels[:, np.newaxis], targets)).astype(np.float32, copy=False)
 
-def _sample_rois(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes):
+def _sample_rois(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_classes,sample_type='fpn', k0 = 4):
     """Generate a random sample of RoIs comprising foreground and background
     examples.
     """
@@ -249,4 +210,19 @@ def _sample_rois(all_rois, gt_boxes, fg_rois_per_image, rois_per_image, num_clas
     bbox_targets, bbox_inside_weights = \
         _get_bbox_regression_labels(bbox_target_data, num_classes)
 
-    return labels, rois, bbox_targets, bbox_inside_weights
+    if sample_type == 'fpn':
+        #print 0
+        w = (rois[:,3]-rois[:,1])
+        h = (rois[:,4]-rois[:,2])
+        s = w * h
+        s[s<=0]=1e-6
+        layer_index = np.floor(k0+np.log2(np.sqrt(s)/224))
+
+        layer_index[layer_index<2]=2
+        layer_index[layer_index>5]=5
+        #print 1
+        return rois, labels, bbox_targets, bbox_inside_weights, layer_index #rois:[512,5]   labels:[512,]
+    else:
+        return rois, labels, bbox_targets, bbox_inside_weights
+
+

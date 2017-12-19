@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <iostream> 
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -15,6 +16,7 @@
  Forward declare boost::thread instead of including boost/thread.hpp
  to avoid a boost/NVCC issues (#1009, #1010) on OSX.
  */
+ using namespace std;
 namespace boost { class mutex; }
 
 namespace caffe {
@@ -66,11 +68,14 @@ class Layer {
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
+
     InitMutex();
     CheckBlobCounts(bottom, top);
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
+
   }
 
   /**

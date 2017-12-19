@@ -25,18 +25,11 @@ class ProposalLayer(caffe.Layer):
         # parse the layer parameter string, which must be valid YAML
         layer_params = yaml.load(self.param_str_)
 
-        self._feat_stride = layer_params['feat_stride']
-        p = int(np.log2(self._feat_stride) + 1)
-        if p == 5:
-            anchor_scales = layer_params.get('scales', (8,16, 32))
-        if p == 4:
-            anchor_scales = layer_params.get('scales', (4,8,16))
-        if p == 3:
-            anchor_scales = layer_params.get('scales',(2,4,8))
-        if p == 2:
-            anchor_scales = layer_params.get('scales',(1,2,4))
-        self._anchors = generate_anchors(scales=np.array(anchor_scales))
-        self._num_anchors = self._anchors.shape[0]
+        
+        self._feat_stride = [int(i) for i in layer_params['feat_stride'].split(',')]
+        self._scales = 2 ** np.arange(3,4)
+        self._ratios = [0.5,1,2]
+        self._min_sizes = [4,8,16,32,64]
 
         if DEBUG:
             print 'feat_stride: {}'.format(self._feat_stride)
@@ -73,100 +66,111 @@ class ProposalLayer(caffe.Layer):
         pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH
-        min_size      = cfg[cfg_key].RPN_MIN_SIZE
+    
 
         # the first set of _num_anchors channels are bg probs
         # the second set are the fg probs, which we want
-        scores = bottom[0].data[:, self._num_anchors:, :, :]
-        bbox_deltas = bottom[1].data
+        scores_list = bottom[0].data
+        bbox_deltas_list = bottom[1].data
         im_info = bottom[2].data[0, :]
 
-        if DEBUG:
-            print 'im_size: ({}, {})'.format(im_info[0], im_info[1])
-            print 'scale: {}'.format(im_info[2])
+        p2_shape =  bottom[3].data.shape
+        p3_shape =  bottom[4].data.shape
+        p4_shape =  bottom[5].data.shape
+        p5_shape =  bottom[6].data.shape
+        p6_shape =  bottom[7].data.shape
+        feat_shape = []
+        feat_shape.append(p2_shape)
+        feat_shape.append(p3_shape)
+        feat_shape.append(p4_shape)
+        feat_shape.append(p5_shape)
+        feat_shape.append(p6_shape)  
+        
+        num_feat = len(feat_shape)#[1,5,4]
+        score_index_start=0
+        bbox_index_start=0
+        keep_proposal = []
+        keep_scores = []
+    #########################
 
-        # 1. Generate proposals from bbox deltas and shifted anchors
-        height, width = scores.shape[-2:]
-
-        if DEBUG:
-            print 'score map size: {}'.format(scores.shape)
-
-        # Enumerate all shifts
-        shift_x = np.arange(0, width) * self._feat_stride
-        shift_y = np.arange(0, height) * self._feat_stride
-        shift_x, shift_y = np.meshgrid(shift_x, shift_y)
-        shifts = np.vstack((shift_x.ravel(), shift_y.ravel(),
-                            shift_x.ravel(), shift_y.ravel())).transpose()
-
-        # Enumerate all shifted anchors:
-        #
-        # add A anchors (1, A, 4) to
-        # cell K shifts (K, 1, 4) to get
-        # shift anchors (K, A, 4)
-        # reshape to (K*A, 4) shifted anchors
-        A = self._num_anchors
-        K = shifts.shape[0]
-        anchors = self._anchors.reshape((1, A, 4)) + \
-                  shifts.reshape((1, K, 4)).transpose((1, 0, 2))
-        anchors = anchors.reshape((K * A, 4))
-
-        # Transpose and reshape predicted bbox transformations to get them
-        # into the same order as the anchors:
-        #
-        # bbox deltas will be (1, 4 * A, H, W) format
-        # transpose to (1, H, W, 4 * A)
-        # reshape to (1 * H * W * A, 4) where rows are ordered by (h, w, a)
-        # in slowest to fastest order
-        bbox_deltas = bbox_deltas.transpose((0, 2, 3, 1)).reshape((-1, 4))
-
-        # Same story for the scores:
-        #
-        # scores are (1, A, H, W) format
-        # transpose to (1, H, W, A)
-        # reshape to (1 * H * W * A, 1) where rows are ordered by (h, w, a)
-        scores = scores.transpose((0, 2, 3, 1)).reshape((-1, 1))
-
-        # Convert anchors into proposals via bbox transformations 
-        proposals = bbox_transform_inv(anchors, bbox_deltas)
-
-        # 2. clip predicted boxes to image
-        proposals = clip_boxes(proposals, im_info[:2])
-
-        # 3. remove predicted boxes with either height or width < threshold
-        # (NOTE: convert min_size to input image scale stored in im_info[2])
-        keep = _filter_boxes(proposals, min_size * im_info[2])
-        proposals = proposals[keep, :]
-        scores = scores[keep]
-
+        for i in range(num_feat):
+            feat_stride = int(self._feat_stride[i])#4,8,16,32,64
+            #print 'feat_stride:', feat_stride
+            anchor = generate_anchors(base_size=feat_stride, ratios=self._ratios, scales=self._scales)
+            num_anchors = anchor.shape[0]#3
+            height = feat_shape[i][2]
+            width = feat_shape[i][3]
+            shift_x = np.arange(0, width) * feat_stride
+            shift_y = np.arange(0, height) * feat_stride
+            shift_x, shift_y = np.meshgrid(shift_x, shift_y)
+            shifts = np.vstack((shift_x.ravel(), shift_y.ravel(), shift_x.ravel(), shift_y.ravel())).transpose()
+            A = num_anchors#3
+            K = shifts.shape[0]#height*width
+            anchors = anchor.reshape((1, A, 4)) + shifts.reshape((1, K, 4)).transpose((1, 0, 2))
+            anchors = anchors.reshape((K * A, 4))#3*height*widht,4
+            scores = (scores_list[0,int(score_index_start):int(score_index_start+K*A*2)]).reshape((1,int(2*num_anchors),-1,int(width)))#1,2*3,h,w
+            scores = scores[:,num_anchors:,:,:]#1,3,h,w
+            bbox_deltas = (bbox_deltas_list[0,int(bbox_index_start):int(bbox_index_start+K*A*4)]).reshape((1,int(4*num_anchors),-1,int(width)))#1,4*3,h,w
+            score_index_start += K*A*2
+            bbox_index_start += K*A*4
+            bbox_deltas = clip_pad(bbox_deltas, (height, width))
+            bbox_deltas = bbox_deltas.transpose((0, 2, 3, 1)).reshape((-1, 4))#[1,h,w,12]--->[1*h*w*3,4]
+            scores = clip_pad(scores, (height, width))
+            scores = scores.transpose((0, 2, 3, 1)).reshape((-1, 1))#[1,h,w,3]--->[1*h*w*3,1]
+            proposals =  bbox_transform_inv(anchors, bbox_deltas)#debug here, corresponding?
+            proposals = clip_boxes(proposals, im_info[:2])
+            keep = _filter_boxes(proposals, self._min_sizes[i] * im_info[2])
+            keep_proposal.append(proposals[keep, :])
+            keep_scores.append(scores[keep])
+        proposals = keep_proposal[0]
+        scores = keep_scores[0]
+        for i in range(1,num_feat):
+            proposals=np.vstack((proposals, keep_proposal[i]))
+            scores=np.vstack((scores, keep_scores[i]))
+        #print 'roi concate t_1 spends :{:.4f}s'.format(time.time()-t_1)
         # 4. sort all (proposal, score) pairs by score from highest to lowest
         # 5. take top pre_nms_topN (e.g. 6000)
+        #t_2 = time.time()
         order = scores.ravel().argsort()[::-1]
         if pre_nms_topN > 0:
             order = order[:pre_nms_topN]
         proposals = proposals[order, :]
         scores = scores[order]
-
+        #print 'roi concate t_2_1_1 spends :{:.4f}s'.format(time.time()-t_2)
         # 6. apply nms (e.g. threshold = 0.7)
         # 7. take after_nms_topN (e.g. 300)
         # 8. return the top proposals (-> RoIs top)
-        keep = nms(np.hstack((proposals, scores)), nms_thresh)
+        #t_nms = time.time()
+        det = np.hstack((proposals, scores)).astype(np.float32)
+        keep = nms(det,nms_thresh)
+        #print 'roi concate nms spends :{:.4f}s'.format(time.time()-t_nms)
+
         if post_nms_topN > 0:
             keep = keep[:post_nms_topN]
+        # pad to ensure output size remains unchanged
+        if len(keep) < post_nms_topN:
+            try:
+                pad = npr.choice(keep, size=post_nms_topN - len(keep))
+            except:
+                proposals = np.zeros((post_nms_topN, 4), dtype=np.float32)
+                proposals[:,2] = 16
+                proposals[:,3] = 16
+                batch_inds = np.zeros((proposals.shape[0], 1), dtype=np.float32)
+                blob = np.hstack((batch_inds, proposals.astype(np.float32, copy=False)))
+                top[0].reshape(*(blob.shape))
+                top[0].data[...] = blob
+                return
+            keep = np.hstack((keep, pad))
         proposals = proposals[keep, :]
         scores = scores[keep]
-
-        # Output rois blob
+        #print 'roi concate t_2 spends :{:.4f}s'.format(time.time()-t_2)
+        # Output rois array
         # Our RPN implementation only supports a single input image, so all
         # batch inds are 0
         batch_inds = np.zeros((proposals.shape[0], 1), dtype=np.float32)
         blob = np.hstack((batch_inds, proposals.astype(np.float32, copy=False)))
         top[0].reshape(*(blob.shape))
         top[0].data[...] = blob
-
-        # [Optional] output scores blob
-        if len(top) > 1:
-            top[1].reshape(*(scores.shape))
-            top[1].data[...] = scores
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -176,9 +180,24 @@ class ProposalLayer(caffe.Layer):
         """Reshaping happens during the call to forward."""
         pass
 
+
 def _filter_boxes(boxes, min_size):
-    """Remove all boxes with any side smaller than min_size."""
+    """ Remove all boxes with any side smaller than min_size """
     ws = boxes[:, 2] - boxes[:, 0] + 1
     hs = boxes[:, 3] - boxes[:, 1] + 1
     keep = np.where((ws >= min_size) & (hs >= min_size))[0]
     return keep
+def clip_pad(tensor, pad_shape):
+    """
+    Clip boxes of the pad area.
+    :param tensor: [n, c, H, W]
+    :param pad_shape: [h, w]
+    :return: [n, c, h, w]
+    """
+    H, W = tensor.shape[2:]
+    h, w = pad_shape
+
+    if h < H or w < W:
+        tensor = tensor[:, :, :h, :w].copy()
+
+    return tensor
