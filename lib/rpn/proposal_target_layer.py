@@ -107,12 +107,12 @@ class ProposalTargetLayer(caffe.Layer):
         top[5].data[...] = bbox_targets_all
 
         # bbox_inside_weights
-        top[6].reshape(*bbox_targets_all.shape)
-        top[6].data[...] = bbox_targets_all
+        top[6].reshape(*bbox_weights_all.shape)
+        top[6].data[...] = bbox_weights_all
 
         # bbox_outside_weights
-        top[7].reshape(*bbox_targets_all.shape)
-        top[7].data[...] = np.array(bbox_targets_all > 0).astype(np.float32)
+        top[7].reshape(*bbox_weights_all.shape)
+        top[7].data[...] = np.array(bbox_weights_all > 0).astype(np.float32)
       
 
     def backward(self, top, propagate_down, bottom):
