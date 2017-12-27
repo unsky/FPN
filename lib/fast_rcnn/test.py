@@ -115,7 +115,7 @@ def _get_blobs(im, rois):
         blobs['rois'] = _get_rois_blob(rois, im_scale_factors)
     return blobs, im_scale_factors
 
-def im_detect(net, im, boxes=None):
+def im_detect(net, im, boxes=None,num_classes=21):
     """Detect object classes in an image given object proposals.
 
     Arguments:
@@ -167,7 +167,10 @@ def im_detect(net, im, boxes=None):
         assert len(im_scales) == 1, "Only single-image batch implemented"
         rois = net.blobs['rois'].data.copy()
         # unscale back to raw image space
-        boxes = rois[:, 1:5] / im_scales[0]
+        boxes = rois[:, 1:5] 
+        index= np.where(np.sum(boxes,axis=1)!=0)[0]
+        boxes = boxes[index,:]/ im_scales[0]
+     
 
     if cfg.TEST.SVM:
         # use the raw scores before softmax under the assumption they
@@ -176,10 +179,24 @@ def im_detect(net, im, boxes=None):
     else:
         # use softmax estimated probabilities
         scores = blobs_out['cls_prob']
+        scores = scores[index]
+
+      #  print scores[0:10]
     
     if cfg.TEST.BBOX_REG:
         # Apply bounding-box regression deltas
         box_deltas = blobs_out['bbox_pred']
+    
+        box_deltas = box_deltas[index,:]
+
+        if cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
+            means = np.tile(
+                    np.array(cfg.TRAIN.BBOX_NORMALIZE_MEANS), (num_classes, 1)).ravel()
+            stds = np.tile(
+                    np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (num_classes, 1)).ravel()
+      #  Optionally normalize targets by a precomputed mean and stdev
+            box_deltas = box_deltas * stds + means
+      #  print boxes.shape,box_deltas.shape
         pred_boxes = bbox_transform_inv(boxes, box_deltas)
         pred_boxes = clip_boxes(pred_boxes, im.shape)
     else:
@@ -190,6 +207,7 @@ def im_detect(net, im, boxes=None):
         # Map scores and predictions back to the original set of boxes
         scores = scores[inv_index, :]
         pred_boxes = pred_boxes[inv_index, :]
+    pred_boxes = pred_boxes
 
     return scores, pred_boxes
 
@@ -236,6 +254,7 @@ def apply_nms(all_boxes, thresh):
 
 def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
     """Test a Fast R-CNN network on an image database."""
+  
     num_images = len(imdb.image_index)
     # all detections are collected into:
     #    all_boxes[cls][image] = N x 5 array of detections in
@@ -265,43 +284,45 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
 
         im = cv2.imread(imdb.image_path_at(i))
         _t['im_detect'].tic()
-        scores, boxes = im_detect(net, im, box_proposals)
+        scores, boxes = im_detect(net, im, box_proposals,imdb.num_classes)
         _t['im_detect'].toc()
 
         _t['misc'].tic()
-        imj =im
-        name = 'output/bads/'+ str(i) + '.jpg'
-        for jj in xrange(1, imdb.num_classes):  
-            indsj = np.where(scores[:, jj] > thresh)[0]
-            cls_scoresj = scores[indsj, jj]
-            cls_boxesj = boxes[indsj, jj*4:(jj+1)*4]
-            cls_detsj = np.hstack((cls_boxesj, cls_scoresj[:, np.newaxis])) \
-                .astype(np.float32, copy=False)
-            keep = nms(cls_detsj, cfg.TEST.NMS)
-            cls_detsj = cls_detsj[keep, :]
-            detsj = cls_detsj
-            for ii in xrange(np.minimum(10, detsj.shape[0])):
-                 bboxj = detsj[ii, :4]
-                 scorej = detsj[ii, -1]
-                 if bboxj != []:
-                     x1 = bboxj[0]
-                     y1 = bboxj[3]
-                     x2 = bboxj[2]
-                     y2 = bboxj[1]
-                     if x1 < 0:
-                         x1=0
-                     if y1> imj.shape[1]:
-                         y1=imj.shape[1]-1
-                     if x2 > imj.shape[0]:
-                         x2 = imj.shape[0]-1
-                     if y2 < 0:
-                         y2 = 0
-                     if scorej > thresh:
-                         cv2.rectangle(imj, (x1, y1), (x2,y2),(0,255,0), 4)
-                         text = str(jj) + ": " + str(scorej)
-                         font = cv2.FONT_HERSHEY_SIMPLEX
-                         cv2.putText(imj, text, (x1, y1),font , 1, (0,0,255), 4)
-        cv2.imwrite(name, imj)
+        vis = True
+        if  vis:
+            imj =im
+            name = 'output/bads/'+ str(i) + '.jpg'
+            for jj in xrange(1, imdb.num_classes):  
+                indsj = np.where(scores[:, jj] > thresh)[0]
+                cls_scoresj = scores[indsj, jj]
+                cls_boxesj = boxes[indsj, jj*4:(jj+1)*4]
+                cls_detsj = np.hstack((cls_boxesj, cls_scoresj[:, np.newaxis])) \
+                    .astype(np.float32, copy=False)
+                keep = nms(cls_detsj, cfg.TEST.NMS)
+                cls_detsj = cls_detsj[keep, :]
+                detsj = cls_detsj
+                for ii in xrange(np.minimum(10, detsj.shape[0])):
+                    bboxj = detsj[ii, :4]
+                    scorej = detsj[ii, -1]
+                    if bboxj != []:
+                        x1 = bboxj[0]
+                        y1 = bboxj[3]
+                        x2 = bboxj[2]
+                        y2 = bboxj[1]
+                        if x1 < 0:
+                            x1=0
+                        if y1> imj.shape[1]:
+                            y1=imj.shape[1]-1
+                        if x2 > imj.shape[0]:
+                            x2 = imj.shape[0]-1
+                        if y2 < 0:
+                            y2 = 0
+                        if scorej > thresh:
+                            cv2.rectangle(imj, (x1, y1), (x2,y2),(0,255,0), 4)
+                            text = str(jj) + ": " + str(scorej)
+                            font = cv2.FONT_HERSHEY_SIMPLEX
+                            cv2.putText(imj, text, (x1, y1),font , 1, (0,0,255), 4)
+            cv2.imwrite(name, imj)
             #aaa
         # skip j = 0, because it's the background class
         for j in xrange(1, imdb.num_classes):

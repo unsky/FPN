@@ -16,6 +16,8 @@ import os
 import google.protobuf.text_format
 from caffe.proto import caffe_pb2
 import google.protobuf as pb2
+import matplotlib
+matplotlib.use("Agg")
 
 class SolverWrapper(object):
     """A simple wrapper around Caffe's solver.
@@ -36,6 +38,7 @@ class SolverWrapper(object):
 
         if cfg.TRAIN.BBOX_REG:
             print 'Computing bounding-box regression targets...'
+    
             self.bbox_means, self.bbox_stds = \
                     rdl_roidb.add_bbox_regression_targets(roidb)
             print 'done'
@@ -61,18 +64,44 @@ class SolverWrapper(object):
         scale_bbox_params = (cfg.TRAIN.BBOX_REG and
                              cfg.TRAIN.BBOX_NORMALIZE_TARGETS and
                              net.params.has_key('bbox_pred'))
-
+     
         if scale_bbox_params:
+            print "------------"
             # save original values
-            orig_0 = net.params['bbox_pred'][0].data.copy()
-            orig_1 = net.params['bbox_pred'][1].data.copy()
+            orig_0_h2 = net.params['bbox_pred/h2'][0].data.copy()
+            orig_1_h2 = net.params['bbox_pred/h2'][1].data.copy()     
+
+            orig_0_h3 = net.params['bbox_pred/h3'][0].data.copy()
+            orig_1_h3 = net.params['bbox_pred/h3'][1].data.copy()
+            orig_0_h4 = net.params['bbox_pred/h4'][0].data.copy()
+            orig_1_h4 = net.params['bbox_pred/h4'][1].data.copy()
+            orig_0_h5 = net.params['bbox_pred/h5'][0].data.copy()
+            orig_1_h5 = net.params['bbox_pred/h5'][1].data.copy()
 
             # scale and shift with bbox reg unnormalization; then save snapshot
-            net.params['bbox_pred'][0].data[...] = \
-                    (net.params['bbox_pred'][0].data *
+            net.params['bbox_pred/h2'][0].data[...] = \
+                    (net.params['bbox_pred/h2'][0].data *
                      self.bbox_stds[:, np.newaxis])
-            net.params['bbox_pred'][1].data[...] = \
-                    (net.params['bbox_pred'][1].data *
+            net.params['bbox_pred/h2'][1].data[...] = \
+                    (net.params['bbox_pred/h2'][1].data *
+                     self.bbox_stds + self.bbox_means)
+            net.params['bbox_pred/h3'][0].data[...] = \
+                    (net.params['bbox_pred/h3'][0].data *
+                     self.bbox_stds[:, np.newaxis])
+            net.params['bbox_pred/h3'][1].data[...] = \
+                    (net.params['bbox_pred/h3'][1].data *
+                     self.bbox_stds + self.bbox_means)
+            net.params['bbox_pred/h4'][0].data[...] = \
+                    (net.params['bbox_pred/h4'][0].data *
+                     self.bbox_stds[:, np.newaxis])
+            net.params['bbox_pred/h4'][1].data[...] = \
+                    (net.params['bbox_pred/h4'][1].data *
+                     self.bbox_stds + self.bbox_means)
+            net.params['bbox_pred/h5'][0].data[...] = \
+                    (net.params['bbox_pred/h5'][0].data *
+                     self.bbox_stds[:, np.newaxis])
+            net.params['bbox_pred/h5'][1].data[...] = \
+                    (net.params['bbox_pred/h5'][1].data *
                      self.bbox_stds + self.bbox_means)
 
         infix = ('_' + cfg.TRAIN.SNAPSHOT_INFIX
@@ -86,8 +115,14 @@ class SolverWrapper(object):
 
         if scale_bbox_params:
             # restore net to original state
-            net.params['bbox_pred'][0].data[...] = orig_0
-            net.params['bbox_pred'][1].data[...] = orig_1
+            net.params['bbox_pred/h2'][0].data[...] = orig_0_h2
+            net.params['bbox_pred/h2'][1].data[...] = orig_1_h2
+            net.params['bbox_pred/h3'][0].data[...] = orig_0_h3
+            net.params['bbox_pred/h3'][1].data[...] = orig_1_h3
+            net.params['bbox_pred/h4'][0].data[...] = orig_0_h4
+            net.params['bbox_pred/h4'][1].data[...] = orig_1_h4
+            net.params['bbox_pred/h5'][0].data[...] = orig_0_h5
+            net.params['bbox_pred/h5'][1].data[...] = orig_1_h5
         return filename
 
     def train_model(self, max_iters):

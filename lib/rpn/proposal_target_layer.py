@@ -12,8 +12,74 @@ import numpy.random as npr
 from fast_rcnn.config import cfg
 from fast_rcnn.bbox_transform import bbox_transform
 from utils.cython_bbox import bbox_overlaps
-
+from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv
+import matplotlib  
+matplotlib.use('Agg') 
 DEBUG = False
+def vis_all_detection(im_array, detections, class_names, scale):
+    """
+    visualize all detections in one image
+    :param im_array: [b=1 c h w] in rgb
+    :param detections: [ numpy.ndarray([[x1 y1 x2 y2 score]]) for j in classes ]
+    :param class_names: list of names in imdb
+    :param scale: visualize the scaled image
+    :return:
+    """
+   # print im_array.shape
+    import matplotlib  
+    matplotlib.use('Agg') 
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import savefig  
+    import random
+    a =  [103.06 ,115.9 ,123.15]
+    a = np.array(a)
+    im = transform_inverse(im_array,a)
+    plt.imshow(im)
+    for j in range(len(class_names)):
+        if class_names[j] == 0:
+            continue
+        color = (random.random(), random.random(), random.random())  # generate a random color
+        dets = detections[j]
+        det =dets
+        bbox = det[0:] 
+        score = det[0]
+        rect = plt.Rectangle((bbox[0], bbox[1]),
+                                 bbox[2] - bbox[0],
+                                 bbox[3] - bbox[1], fill=False,
+                                 edgecolor=color, linewidth=3.5)
+        plt.gca().add_patch(rect)
+        plt.gca().text(bbox[0], bbox[1] - 2,
+                           '{:s} {:.3f}'.format(str(class_names[j]), score),
+                           bbox=dict(facecolor=color, alpha=0.5), fontsize=12, color='white')
+    plt.show()
+    name = np.mean(im)
+    savefig ('vis/'+str(name)+'.png')
+    plt.clf()
+    plt.cla()
+
+    plt. close(0)
+
+def transform_inverse(im_tensor, pixel_means):
+    """
+    transform from mxnet im_tensor to ordinary RGB image
+    im_tensor is limited to one image
+    :param im_tensor: [batch, channel, height, width]
+    :param pixel_means: [B, G, R pixel means]
+    :return: im [height, width, channel(RGB)]
+    """
+    assert im_tensor.shape[0] == 1
+    im_tensor = im_tensor.copy()
+    # put channel back
+    channel_swap = (0, 2, 3, 1)
+    im_tensor = im_tensor.transpose(channel_swap)
+    im = im_tensor[0]
+    assert im.shape[2] == 3
+    im += pixel_means[[2, 1, 0]]
+    im = im.astype(np.uint8)
+    return im
+
+
+
 
 class ProposalTargetLayer(caffe.Layer):
     """
@@ -48,6 +114,7 @@ class ProposalTargetLayer(caffe.Layer):
         # TODO(rbg): it's annoying that sometimes I have extra info before
         # and other times after box coordinates -- normalize to one format
         gt_boxes = bottom[1].data
+        im = bottom[2].data
         # Include ground-truth boxes in the set of candidate rois
         zeros = np.zeros((gt_boxes.shape[0], 1), dtype=gt_boxes.dtype)
         all_rois = np.vstack(
@@ -61,6 +128,30 @@ class ProposalTargetLayer(caffe.Layer):
         rois, labels, bbox_targets, bbox_weights ,layer_indexs = _sample_rois(
             all_rois, gt_boxes, fg_rois_per_image,
             rois_per_image, self._num_classes,sample_type='fpn', k0 = 4)
+        vis = False
+        if vis:
+            ind = np.where(labels!=0)[0]
+            im_shape = im.shape
+            means = np.tile(
+                     np.array(cfg.TRAIN.BBOX_NORMALIZE_MEANS), (21, 1)).ravel()
+            stds = np.tile(
+                    np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (21, 1)).ravel()
+            bbox_targets = bbox_targets*stds +means
+            
+            pred_boxes = bbox_transform_inv(rois[:,1:], bbox_targets)
+            pred_boxes = clip_boxes(pred_boxes, im_shape[-2:])
+            l =labels[ind]
+            ro = rois[ind,1:]
+            b = bbox_targets[ind,:]
+            p = pred_boxes[ind,:]*bbox_weights[ind,:]
+            r = []
+            for i in range(p.shape[0]):
+                r.append(p[i,l[i]*4:l[i]*4+4])
+            r_ =  np.vstack(r)
+
+      #  Optionally normalize targets by a precomputed mean and stdev
+        
+            vis_all_detection(im, r_, l, 1)
 
         rois_ = np.zeros((self._batch_rois*4, 5), dtype=rois.dtype)
         labels_all = np.ones((self._batch_rois*4, ), dtype=labels.dtype)*-1

@@ -50,7 +50,7 @@ class AnchorTargetLayer(caffe.Layer):
             self._count = 0
 
         # allow boxes to sit over the edge by a small amount
-        self._allowed_border = layer_params.get('allowed_border', 1000)
+        self._allowed_border = layer_params.get('allowed_border', 100)
 
         height, width = bottom[0].data.shape[-2:]
         if DEBUG:
@@ -168,7 +168,7 @@ class AnchorTargetLayer(caffe.Layer):
             labels[disable_inds] = -1
             #print "was %s inds, disabling %s, now %s inds" % (
                 #len(bg_inds), len(disable_inds), np.sum(labels == 0))
-
+    
         bbox_targets = np.zeros((len(inds_inside), 4), dtype=np.float32)
         bbox_targets = _compute_targets(anchors, gt_boxes[argmax_overlaps, :])
 
@@ -207,6 +207,7 @@ class AnchorTargetLayer(caffe.Layer):
         bbox_targets = _unmap(bbox_targets, total_anchors, inds_inside, fill=0)
         bbox_inside_weights = _unmap(bbox_inside_weights, total_anchors, inds_inside, fill=0)
         bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, fill=0)
+      
 
         if DEBUG:
             print 'rpn: max max_overlap', np.max(max_overlaps)

@@ -45,7 +45,7 @@ __C.TRAIN.MAX_SIZE = 1024
 __C.TRAIN.IMS_PER_BATCH = 2
 
 # Minibatch size (number of regions of interest [ROIs])
-__C.TRAIN.BATCH_SIZE = 128
+__C.TRAIN.BATCH_SIZE = 256
 
 # Fraction of minibatch that is labeled foreground (i.e. class > 0)
 __C.TRAIN.FG_FRACTION = 0.25
@@ -56,7 +56,7 @@ __C.TRAIN.FG_THRESH = 0.5
 # Overlap threshold for a ROI to be considered background (class = 0 if
 # overlap in [LO, HI))
 __C.TRAIN.BG_THRESH_HI = 0.5
-__C.TRAIN.BG_THRESH_LO = 0.0
+__C.TRAIN.BG_THRESH_LO = 0.001
 
 # Use horizontally-flipped images during training?
 __C.TRAIN.USE_FLIPPED = True
@@ -69,7 +69,7 @@ __C.TRAIN.BBOX_REG = True
 __C.TRAIN.BBOX_THRESH = 0.7
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 5000
+__C.TRAIN.SNAPSHOT_ITERS = 10000
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
@@ -85,7 +85,7 @@ __C.TRAIN.BBOX_NORMALIZE_TARGETS = True
 __C.TRAIN.BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
 # Normalize the targets using "precomputed" (or made up) means and stdevs
 # (BBOX_NORMALIZE_TARGETS must also be True)
-__C.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED = False
+__C.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED = True
 __C.TRAIN.BBOX_NORMALIZE_MEANS = (0.0, 0.0, 0.0, 0.0)
 __C.TRAIN.BBOX_NORMALIZE_STDS = (0.1, 0.1, 0.2, 0.2)
 
@@ -160,7 +160,7 @@ __C.TEST.RPN_NMS_THRESH = 0.7
 ## Number of top scoring boxes to keep before apply NMS to RPN proposals
 __C.TEST.RPN_PRE_NMS_TOP_N = 6000
 ## Number of top scoring boxes to keep after applying NMS to RPN proposals
-__C.TEST.RPN_POST_NMS_TOP_N = 2000
+__C.TEST.RPN_POST_NMS_TOP_N = 500
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
 __C.TEST.RPN_MIN_SIZE = 16
 

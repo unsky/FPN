@@ -23,7 +23,7 @@ class As_roisLayer(caffe.Layer):
 
     def setup(self, bottom, top):
         layer_params = yaml.load(self.param_str_)
-        self._batch_rois = cfg.TEST.RPN_POST_NMS_TOP_N/4
+        self._batch_rois = cfg.TEST.RPN_POST_NMS_TOP_N
 
         # sampled rois (0, x1, y1, x2, y2)
         top[0].reshape(1, 5)

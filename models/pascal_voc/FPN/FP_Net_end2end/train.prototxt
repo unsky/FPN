@@ -3360,6 +3360,7 @@ layer {
   type: 'Python'
   bottom: 'rpn_rois'
   bottom: 'gt_boxes'
+	bottom: 'data'
   top: 'rois/h2'
   top: 'rois/h3'
   top: 'rois/h4'

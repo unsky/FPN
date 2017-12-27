@@ -51,7 +51,7 @@ NET_FINAL="./data/pretrained_model/ResNet50.v2.caffemodel"
 
 time ./tools/test_net.py --gpu ${GPU_ID} \
   --def models/${PT_DIR}/${NET}/FP_Net_end2end/test.prototxt \
-  --net ${NET_FINAL} \
+  --net output/FP_Net_end2end/voc_2007_trainval/fpn_iter_250000.caffemodel \
   --imdb ${TEST_IMDB} \
   --cfg experiments/cfgs/FP_Net_end2end.yml \
   ${EXTRA_ARGS}
