@@ -163,6 +163,8 @@ def im_detect(net, im, boxes=None,num_classes=21):
         forward_kwargs['rois'] = blobs['rois'].astype(np.float32, copy=False)
     blobs_out = net.forward(**forward_kwargs)
 
+
+
     if cfg.TEST.HAS_RPN:
         assert len(im_scales) == 1, "Only single-image batch implemented"
         rois = net.blobs['rois'].data.copy()
@@ -196,6 +198,8 @@ def im_detect(net, im, boxes=None,num_classes=21):
                     np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (num_classes, 1)).ravel()
       #  Optionally normalize targets by a precomputed mean and stdev
             box_deltas = box_deltas * stds + means
+           
+
       #  print boxes.shape,box_deltas.shape
         pred_boxes = bbox_transform_inv(boxes, box_deltas)
         pred_boxes = clip_boxes(pred_boxes, im.shape)
@@ -207,7 +211,7 @@ def im_detect(net, im, boxes=None,num_classes=21):
         # Map scores and predictions back to the original set of boxes
         scores = scores[inv_index, :]
         pred_boxes = pred_boxes[inv_index, :]
-    pred_boxes = pred_boxes
+  
 
     return scores, pred_boxes
 
@@ -288,7 +292,7 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
         _t['im_detect'].toc()
 
         _t['misc'].tic()
-        vis = True
+        vis = False
         if  vis:
             imj =im
             name = 'output/bads/'+ str(i) + '.jpg'

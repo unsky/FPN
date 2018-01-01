@@ -1,3 +1,5 @@
+
+
 name: "ResNet-50"
 input: "data"
 input_shape {
@@ -2615,35 +2617,39 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p2"
-   top: "rpn_cls_score_reshape/p2"
-   name: "rpn_cls_score_reshape/p2"
+   top: "rpn_cls_score_reshape_/p2"
+   name: "rpn_cls_score_reshape_/p2"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
 }
 
 
 
-#========= RoI Proposal ============
+
+
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_cls_prob/p2"
+  name: "fpn_out/p2"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p2"
-  top: "rpn_cls_prob/p2"
+  bottom: "rpn_cls_score_reshape_/p2"
+  top: "fpn_out/p2"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p2'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p2'
-  top: 'rpn_cls_prob_reshape/p2'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p2"
+   top: "fpn_out_reshape/p2"
+   name: "fpn_out_reshape/p2"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
-
-
-
 
 
 #========= RPN/p3 ============
@@ -2711,33 +2717,38 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p3"
-   top: "rpn_cls_score_reshape/p3"
-   name: "rpn_cls_score_reshape/p3"
+   top: "rpn_cls_score_reshape_/p3"
+   name: "rpn_cls_score_reshape_/p3"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
 }
 
 
 
-#========= RoI Proposal ============
+
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_cls_prob/p3"
+  name: "fpn_out/p3"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p3"
-  top: "rpn_cls_prob/p3"
+  bottom: "rpn_cls_score_reshape_/p3"
+  top: "fpn_out/p3"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p3'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p3'
-  top: 'rpn_cls_prob_reshape/p3'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p3"
+   top: "fpn_out_reshape/p3"
+   name: "fpn_out_reshape/p3"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
-
 
 
 
@@ -2806,34 +2817,40 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p4"
-   top: "rpn_cls_score_reshape/p4"
-   name: "rpn_cls_score_reshape/p4"
+   top: "rpn_cls_score_reshape_/p4"
+   name: "rpn_cls_score_reshape_/p4"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
 }
 
 
 
 
 
-#========= RoI Proposal ============
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_cls_prob/p4"
+  name: "fpn_out/p4"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p4"
-  top: "rpn_cls_prob/p4"
+  bottom: "rpn_cls_score_reshape_/p4"
+  top: "fpn_out/p4"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p4'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p4'
-  top: 'rpn_cls_prob_reshape/p4'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p4"
+   top: "fpn_out_reshape/p4"
+   name: "fpn_out_reshape/p4"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
+
 
 
 
@@ -2903,33 +2920,38 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p5"
-   top: "rpn_cls_score_reshape/p5"
-   name: "rpn_cls_score_reshape/p5"
+   top: "rpn_cls_score_reshape_/p5"
+   name: "rpn_cls_score_reshape_/p5"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
 }
 
 
 
 
 
-#========= RoI Proposal ============
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_cls_prob/p5"
+  name: "fpn_out/p5"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p5"
-  top: "rpn_cls_prob/p5"
+  bottom: "rpn_cls_score_reshape_/p5"
+  top: "fpn_out/p5"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p5'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p5'
-  top: 'rpn_cls_prob_reshape/p5'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p5"
+   top: "fpn_out_reshape/p5"
+   name: "fpn_out_reshape/p5"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
 
 #========= RPN/p6 ============
@@ -2998,140 +3020,67 @@ layer {
   }
 }
 
+
+######
+
 layer {
    bottom: "rpn_cls_score/p6"
-   top: "rpn_cls_score_reshape/p6"
-   name: "rpn_cls_score_reshape/p6"
+   top: "rpn_cls_score_reshape_/p6"
+   name: "rpn_cls_score_reshape_/p6"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
 }
+
+
+
+
+
+
+
+#####CLS out
+
+
+layer {
+  name: "fpn_out/p6"
+  type: "Softmax"
+  bottom: "rpn_cls_score_reshape_/p6"
+  top: "fpn_out/p6"
+}
+
+layer {
+   bottom: "fpn_out/p6"
+   top: "fpn_out_reshape/p6"
+   name: "fpn_out_reshape/p6"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
+}
+
+########rpn loss#####################
+
+
 
 
 
 #========= RoI Proposal ============
 
-layer {
-  name: "rpn_cls_prob/p6"
-  type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p6"
-  top: "rpn_cls_prob/p6"
-}
-
-layer {
-  name: 'rpn_cls_prob_reshape/p6'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p6'
-  top: 'rpn_cls_prob_reshape/p6'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
-}
 
 
-###
-layer {
-  name: "rpn_cls_prob_reshape_flatten/p2"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p2"
-  top: "rpn_cls_prob_reshape_flatten/p2"
-  }
-layer {
-  name: "rpn_cls_prob_reshape_flatten/p3"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p3"
-  top: "rpn_cls_prob_reshape_flatten/p3"
-  }  
- layer {
-  name: "rpn_cls_prob_reshape_flatten/p4"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p4"
-  top: "rpn_cls_prob_reshape_flatten/p4"
-  }  
-  
-  layer {
-  name: "rpn_cls_prob_reshape_flatten/p5"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p5"
-  top: "rpn_cls_prob_reshape_flatten/p5"
-  }  
-  
- layer {
-  name: "rpn_cls_prob_reshape_flatten/p6"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p6"
-  top: "rpn_cls_prob_reshape_flatten/p6"
-  }
-
-###
-layer {
-  name: "rpn_cls_prob_reshape_concat"
-  type: "Concat"
-  bottom: "rpn_cls_prob_reshape_flatten/p2"
-  bottom: "rpn_cls_prob_reshape_flatten/p3"
-  bottom: "rpn_cls_prob_reshape_flatten/p4"
-  bottom: "rpn_cls_prob_reshape_flatten/p5"
-  bottom: "rpn_cls_prob_reshape_flatten/p6"
-  top: "rpn_cls_prob_reshape"
-  concat_param {
-    axis: 1
-  }
-}
-
-  layer {
-  name: "rpn_cls_prob_reshape_flatten/p2"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p2"
-  top: "rpn_bbox_pred_flatten/p2"
-  }  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p3"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p3"
-  top: "rpn_bbox_pred_flatten/p3"
-  }  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p4"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p4"
-  top: "rpn_bbox_pred_flatten/p4"
-  }  
-  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p5"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p5"
-  top: "rpn_bbox_pred_flatten/p5"
-  }  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p6"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p6"
-  top: "rpn_bbox_pred_flatten/p6"
-  }  
-layer {
-  name: "rpn_bbox_pred_concat"
-  type: "Concat"
-  bottom: "rpn_bbox_pred_flatten/p2"
-  bottom: "rpn_bbox_pred_flatten/p3"
-  bottom: "rpn_bbox_pred_flatten/p4"
-  bottom: "rpn_bbox_pred_flatten/p5"
-  bottom: "rpn_bbox_pred_flatten/p6"
-  top: "rpn_bbox_pred"
-  concat_param {
-    axis: 1
-  }
-}
-
+ 
 
 layer {
   name: 'proposal'
   type: 'Python'
-  bottom: 'rpn_cls_prob_reshape'
-  bottom: 'rpn_bbox_pred'
-  bottom: 'im_info'
-	bottom: 'p2'
-	bottom: 'p3'
-	bottom: 'p4'
-	bottom: 'p5'
-	bottom: 'p6'	
+    bottom: 'im_info'
+    bottom: 'rpn_bbox_pred/p2'
+    bottom: 'rpn_bbox_pred/p3'
+	bottom: 'rpn_bbox_pred/p4'
+	bottom: 'rpn_bbox_pred/p5'
+	bottom: 'rpn_bbox_pred/p6'
+ 	bottom: 'fpn_out_reshape/p2'
+	bottom: 'fpn_out_reshape/p3'
+	bottom: 'fpn_out_reshape/p4'
+	bottom: 'fpn_out_reshape/p5'
+	bottom: 'fpn_out_reshape/p6'
   top: 'rpn_rois'
   python_param {
     module: 'rpn.proposal_layer'
@@ -3160,7 +3109,6 @@ layer {
 
   }
 }
-
 
 #========= RCNN ============
 
@@ -3773,13 +3721,3 @@ layer {
   bottom: "cls_score"
   top: "cls_prob"
 }
-
-
-
-
-
-
-
-
-
-

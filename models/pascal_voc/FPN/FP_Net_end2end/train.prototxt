@@ -2614,78 +2614,53 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p2"
+   top: "rpn_cls_score_reshape_/p2"
+   name: "rpn_cls_score_reshape_/p2"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
+}
+
+
+layer {
+   bottom: "rpn_bbox_pred/p2"
+   top: "rpn_bbox_pred_reshape/p2"
+   name: "rpn_bbox_pred_reshape/p2"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 0 dim: -1 } }
+}
+
+layer {
+   bottom: "rpn_cls_score_reshape_/p2"
    top: "rpn_cls_score_reshape/p2"
    name: "rpn_cls_score_reshape/p2"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 } }
 }
 
-layer {
-  name: 'rpn-data/p2'
-  type: 'Python'
-  bottom: 'rpn_cls_score/p2'
-  bottom: 'gt_boxes'
-  bottom: 'im_info'
-  bottom: 'data'
-  top: 'rpn_labels/p2'
-  top: 'rpn_bbox_targets/p2'
-  top: 'rpn_bbox_inside_weights/p2'
-  top: 'rpn_bbox_outside_weights/p2'
-  python_param {
-    module: 'rpn.anchor_target_layer'
-    layer: 'AnchorTargetLayer'
-    param_str: "'feat_stride': 4"
-  }
-}
+
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_loss_cls/p2"
-  type: "SoftmaxWithLoss"
-  bottom: "rpn_cls_score_reshape/p2"
-  bottom: "rpn_labels/p2"
-  propagate_down: 1
-  propagate_down: 0
-  top: "rpn_cls_loss/p2"
-  loss_weight: 1
-  loss_param {
-    ignore_label: -1
-    normalize: true
-  }
-}
-
-layer {
-  name: "rpn_loss_bbox/p2"
-  type: "SmoothL1Loss"
-  bottom: "rpn_bbox_pred/p2"
-  bottom: "rpn_bbox_targets/p2"
-  bottom: 'rpn_bbox_inside_weights/p2'
-  bottom: 'rpn_bbox_outside_weights/p2'
-  top: "rpn_loss_bbox/p2"
-  loss_weight: 1
-  smooth_l1_loss_param { sigma: 3.0 }
-}
-
-#========= RoI Proposal ============
-
-layer {
-  name: "rpn_cls_prob/p2"
+  name: "fpn_out/p2"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p2"
-  top: "rpn_cls_prob/p2"
+  bottom: "rpn_cls_score_reshape_/p2"
+  top: "fpn_out/p2"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p2'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p2'
-  top: 'rpn_cls_prob_reshape/p2'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p2"
+   top: "fpn_out_reshape/p2"
+   name: "fpn_out_reshape/p2"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
-
-
-
 
 
 #========= RPN/p3 ============
@@ -2753,76 +2728,53 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p3"
+   top: "rpn_cls_score_reshape_/p3"
+   name: "rpn_cls_score_reshape_/p3"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
+}
+
+
+layer {
+   bottom: "rpn_bbox_pred/p3"
+   top: "rpn_bbox_pred_reshape/p3"
+   name: "rpn_bbox_pred_reshape/p3"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 0 dim: -1 } }
+}
+
+layer {
+   bottom: "rpn_cls_score_reshape_/p3"
    top: "rpn_cls_score_reshape/p3"
    name: "rpn_cls_score_reshape/p3"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 } }
 }
 
-layer {
-  name: 'rpn-data/p3'
-  type: 'Python'
-  bottom: 'rpn_cls_score/p3'
-  bottom: 'gt_boxes'
-  bottom: 'im_info'
-  bottom: 'data'
-  top: 'rpn_labels/p3'
-  top: 'rpn_bbox_targets/p3'
-  top: 'rpn_bbox_inside_weights/p3'
-  top: 'rpn_bbox_outside_weights/p3'
-  python_param {
-    module: 'rpn.anchor_target_layer'
-    layer: 'AnchorTargetLayer'
-    param_str: "'feat_stride': 8"
-  }
-}
+
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_loss_cls/p3"
-  type: "SoftmaxWithLoss"
-  bottom: "rpn_cls_score_reshape/p3"
-  bottom: "rpn_labels/p3"
-  propagate_down: 1
-  propagate_down: 0
-  top: "rpn_cls_loss/p3"
-  loss_weight: 1
-  loss_param {
-    ignore_label: -1
-    normalize: true
-  }
-}
-
-layer {
-  name: "rpn_loss_bbox/p3"
-  type: "SmoothL1Loss"
-  bottom: "rpn_bbox_pred/p3"
-  bottom: "rpn_bbox_targets/p3"
-  bottom: 'rpn_bbox_inside_weights/p3'
-  bottom: 'rpn_bbox_outside_weights/p3'
-  top: "rpn_loss_bbox/p3"
-  loss_weight: 1
-  smooth_l1_loss_param { sigma: 3.0 }
-}
-
-#========= RoI Proposal ============
-
-layer {
-  name: "rpn_cls_prob/p3"
+  name: "fpn_out/p3"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p3"
-  top: "rpn_cls_prob/p3"
+  bottom: "rpn_cls_score_reshape_/p3"
+  top: "fpn_out/p3"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p3'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p3'
-  top: 'rpn_cls_prob_reshape/p3'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p3"
+   top: "fpn_out_reshape/p3"
+   name: "fpn_out_reshape/p3"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
-
 
 
 
@@ -2891,75 +2843,54 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p4"
+   top: "rpn_cls_score_reshape_/p4"
+   name: "rpn_cls_score_reshape_/p4"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
+}
+
+
+layer {
+   bottom: "rpn_bbox_pred/p4"
+   top: "rpn_bbox_pred_reshape/p4"
+   name: "rpn_bbox_pred_reshape/p4"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 0 dim: -1 } }
+}
+
+layer {
+   bottom: "rpn_cls_score_reshape_/p4"
    top: "rpn_cls_score_reshape/p4"
    name: "rpn_cls_score_reshape/p4"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 } }
 }
 
-layer {
-  name: 'rpn-data/p4'
-  type: 'Python'
-  bottom: 'rpn_cls_score/p4'
-  bottom: 'gt_boxes'
-  bottom: 'im_info'
-  bottom: 'data'
-  top: 'rpn_labels/p4'
-  top: 'rpn_bbox_targets/p4'
-  top: 'rpn_bbox_inside_weights/p4'
-  top: 'rpn_bbox_outside_weights/p4'
-  python_param {
-    module: 'rpn.anchor_target_layer'
-    layer: 'AnchorTargetLayer'
-    param_str: "'feat_stride': 16"
-  }
-}
+
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_loss_cls/p4"
-  type: "SoftmaxWithLoss"
-  bottom: "rpn_cls_score_reshape/p4"
-  bottom: "rpn_labels/p4"
-  propagate_down: 1
-  propagate_down: 0
-  top: "rpn_cls_loss/p4"
-  loss_weight: 1
-  loss_param {
-    ignore_label: -1
-    normalize: true
-  }
-}
-
-layer {
-  name: "rpn_loss_bbox/p4"
-  type: "SmoothL1Loss"
-  bottom: "rpn_bbox_pred/p4"
-  bottom: "rpn_bbox_targets/p4"
-  bottom: 'rpn_bbox_inside_weights/p4'
-  bottom: 'rpn_bbox_outside_weights/p4'
-  top: "rpn_loss_bbox/p4"
-  loss_weight: 1
-  smooth_l1_loss_param { sigma: 3.0 }
-}
-
-#========= RoI Proposal ============
-
-layer {
-  name: "rpn_cls_prob/p4"
+  name: "fpn_out/p4"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p4"
-  top: "rpn_cls_prob/p4"
+  bottom: "rpn_cls_score_reshape_/p4"
+  top: "fpn_out/p4"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p4'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p4'
-  top: 'rpn_cls_prob_reshape/p4'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p4"
+   top: "fpn_out_reshape/p4"
+   name: "fpn_out_reshape/p4"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
+
 
 
 
@@ -3029,74 +2960,52 @@ layer {
   }
 }
 
+######
+
 layer {
    bottom: "rpn_cls_score/p5"
+   top: "rpn_cls_score_reshape_/p5"
+   name: "rpn_cls_score_reshape_/p5"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
+}
+
+
+layer {
+   bottom: "rpn_bbox_pred/p5"
+   top: "rpn_bbox_pred_reshape/p5"
+   name: "rpn_bbox_pred_reshape/p5"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 0 dim: -1 } }
+}
+
+layer {
+   bottom: "rpn_cls_score_reshape_/p5"
    top: "rpn_cls_score_reshape/p5"
    name: "rpn_cls_score_reshape/p5"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 } }
 }
 
-layer {
-  name: 'rpn-data/p5'
-  type: 'Python'
-  bottom: 'rpn_cls_score/p5'
-  bottom: 'gt_boxes'
-  bottom: 'im_info'
-  bottom: 'data'
-  top: 'rpn_labels/p5'
-  top: 'rpn_bbox_targets/p5'
-  top: 'rpn_bbox_inside_weights/p5'
-  top: 'rpn_bbox_outside_weights/p5'
-  python_param {
-    module: 'rpn.anchor_target_layer'
-    layer: 'AnchorTargetLayer'
-    param_str: "'feat_stride': 32"
-  }
-}
+
+
+
+#####CLS out
+
 
 layer {
-  name: "rpn_loss_cls/p5"
-  type: "SoftmaxWithLoss"
-  bottom: "rpn_cls_score_reshape/p5"
-  bottom: "rpn_labels/p5"
-  propagate_down: 1
-  propagate_down: 0
-  top: "rpn_cls_loss/p5"
-  loss_weight: 1
-  loss_param {
-    ignore_label: -1
-    normalize: true
-  }
-}
-
-layer {
-  name: "rpn_loss_bbox/p5"
-  type: "SmoothL1Loss"
-  bottom: "rpn_bbox_pred/p5"
-  bottom: "rpn_bbox_targets/p5"
-  bottom: 'rpn_bbox_inside_weights/p5'
-  bottom: 'rpn_bbox_outside_weights/p5'
-  top: "rpn_loss_bbox/p5"
-  loss_weight: 1
-  smooth_l1_loss_param { sigma: 3.0 }
-}
-
-#========= RoI Proposal ============
-
-layer {
-  name: "rpn_cls_prob/p5"
+  name: "fpn_out/p5"
   type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p5"
-  top: "rpn_cls_prob/p5"
+  bottom: "rpn_cls_score_reshape_/p5"
+  top: "fpn_out/p5"
 }
 
 layer {
-  name: 'rpn_cls_prob_reshape/p5'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p5'
-  top: 'rpn_cls_prob_reshape/p5'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
+   bottom: "fpn_out/p5"
+   top: "fpn_out_reshape/p5"
+   name: "fpn_out_reshape/p5"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
 }
 
 #========= RPN/p6 ============
@@ -3165,183 +3074,157 @@ layer {
   }
 }
 
+
+######
+
 layer {
    bottom: "rpn_cls_score/p6"
+   top: "rpn_cls_score_reshape_/p6"
+   name: "rpn_cls_score_reshape_/p6"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 dim:0} }
+}
+
+
+layer {
+   bottom: "rpn_bbox_pred/p6"
+   top: "rpn_bbox_pred_reshape/p6"
+   name: "rpn_bbox_pred_reshape/p6"
+   type: "Reshape"
+   reshape_param { shape { dim: 0 dim: 0 dim: -1 } }
+}
+
+layer {
+   bottom: "rpn_cls_score_reshape_/p6"
    top: "rpn_cls_score_reshape/p6"
    name: "rpn_cls_score_reshape/p6"
    type: "Reshape"
-   reshape_param { shape { dim: 0 dim: 2 dim: -1 dim: 0 } }
+   reshape_param { shape {dim: 0 dim: 2 dim: -1 } }
+}
+
+
+
+
+#####CLS out
+
+
+layer {
+  name: "fpn_out/p6"
+  type: "Softmax"
+  bottom: "rpn_cls_score_reshape_/p6"
+  top: "fpn_out/p6"
 }
 
 layer {
-  name: 'rpn-data/p6'
+   bottom: "fpn_out/p6"
+   top: "fpn_out_reshape/p6"
+   name: "fpn_out_reshape/p6"
+   type: "Reshape"
+   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
+}
+
+########rpn loss#####################
+
+layer {
+  name: "rpn_cls_score_reshapee"
+  type: "Concat"
+  bottom: "rpn_cls_score_reshape/p2"
+  bottom: "rpn_cls_score_reshape/p3"
+  bottom: "rpn_cls_score_reshape/p4"
+  bottom: "rpn_cls_score_reshape/p5"
+  bottom: "rpn_cls_score_reshape/p6"
+  top: "rpn_cls_score_reshape"
+  concat_param {
+    axis: 2
+  }
+}
+
+
+
+layer {
+  name: "rpn_bbox_pred"
+  type: "Concat"
+  bottom: "rpn_bbox_pred_reshape/p2"
+  bottom: "rpn_bbox_pred_reshape/p3"
+  bottom: "rpn_bbox_pred_reshape/p4"
+  bottom: "rpn_bbox_pred_reshape/p5"
+  bottom: "rpn_bbox_pred_reshape/p6"
+  top: "rpn_bbox_pred"
+  concat_param {
+    axis: 2
+  }
+}
+
+
+
+layer {
+  name: 'rpn-data'
   type: 'Python'
+  bottom: 'rpn_cls_score/p2'
+  bottom: 'rpn_cls_score/p3'
+  bottom: 'rpn_cls_score/p4'
+  bottom: 'rpn_cls_score/p5'
   bottom: 'rpn_cls_score/p6'
   bottom: 'gt_boxes'
   bottom: 'im_info'
-  bottom: 'data'
-  top: 'rpn_labels/p6'
-  top: 'rpn_bbox_targets/p6'
-  top: 'rpn_bbox_inside_weights/p6'
-  top: 'rpn_bbox_outside_weights/p6'
+  top: 'rpn_labels'
+  top: 'rpn_bbox_targets'
+  top: 'rpn_bbox_inside_weights'
+  top: 'rpn_bbox_outside_weights'
   python_param {
     module: 'rpn.anchor_target_layer'
     layer: 'AnchorTargetLayer'
-    param_str: "'feat_stride': 64"
+    param_str: "'feat_stride': 4,8,16,32,64"
   }
 }
 
 layer {
-  name: "rpn_loss_cls/p6"
+  name: "fpn_loss_cls"
   type: "SoftmaxWithLoss"
-  bottom: "rpn_cls_score_reshape/p6"
-  bottom: "rpn_labels/p6"
+  bottom: "rpn_cls_score_reshape"
+  bottom: "rpn_labels"
   propagate_down: 1
   propagate_down: 0
-  top: "rpn_cls_loss/p6"
+  top: "FPNClsLoss"
   loss_weight: 1
   loss_param {
     ignore_label: -1
-    normalize: true
+    normalization: VALID
   }
 }
 
 layer {
-  name: "rpn_loss_bbox/p6"
+  name: "rpn_loss_bbox"
   type: "SmoothL1Loss"
-  bottom: "rpn_bbox_pred/p6"
-  bottom: "rpn_bbox_targets/p6"
-  bottom: 'rpn_bbox_inside_weights/p6'
-  bottom: 'rpn_bbox_outside_weights/p6'
-  top: "rpn_loss_bbox/p6"
+  bottom: "rpn_bbox_pred"
+  bottom: "rpn_bbox_targets"
+  bottom: 'rpn_bbox_inside_weights'
+  bottom: 'rpn_bbox_outside_weights'
+  top: "FPNLossBBox"
   loss_weight: 1
   smooth_l1_loss_param { sigma: 3.0 }
 }
 
 #========= RoI Proposal ============
 
-layer {
-  name: "rpn_cls_prob/p6"
-  type: "Softmax"
-  bottom: "rpn_cls_score_reshape/p6"
-  top: "rpn_cls_prob/p6"
-}
-
-layer {
-  name: 'rpn_cls_prob_reshape/p6'
-  type: 'Reshape'
-  bottom: 'rpn_cls_prob/p6'
-  top: 'rpn_cls_prob_reshape/p6'
-  reshape_param { shape { dim: 0 dim: 6 dim: -1 dim: 0 } }
-}
 
 
-###
-layer {
-  name: "rpn_cls_prob_reshape_flatten/p2"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p2"
-  top: "rpn_cls_prob_reshape_flatten/p2"
-  }
-layer {
-  name: "rpn_cls_prob_reshape_flatten/p3"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p3"
-  top: "rpn_cls_prob_reshape_flatten/p3"
-  }  
- layer {
-  name: "rpn_cls_prob_reshape_flatten/p4"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p4"
-  top: "rpn_cls_prob_reshape_flatten/p4"
-  }  
-  
-  layer {
-  name: "rpn_cls_prob_reshape_flatten/p5"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p5"
-  top: "rpn_cls_prob_reshape_flatten/p5"
-  }  
-  
- layer {
-  name: "rpn_cls_prob_reshape_flatten/p6"
-  type: "Flatten"
-  bottom: "rpn_cls_prob_reshape/p6"
-  top: "rpn_cls_prob_reshape_flatten/p6"
-  }
-
-###
-layer {
-  name: "rpn_cls_prob_reshape_concat"
-  type: "Concat"
-  bottom: "rpn_cls_prob_reshape_flatten/p2"
-  bottom: "rpn_cls_prob_reshape_flatten/p3"
-  bottom: "rpn_cls_prob_reshape_flatten/p4"
-  bottom: "rpn_cls_prob_reshape_flatten/p5"
-  bottom: "rpn_cls_prob_reshape_flatten/p6"
-  top: "rpn_cls_prob_reshape"
-  concat_param {
-    axis: 1
-  }
-}
-
-  layer {
-  name: "rpn_cls_prob_reshape_flatten/p2"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p2"
-  top: "rpn_bbox_pred_flatten/p2"
-  }  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p3"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p3"
-  top: "rpn_bbox_pred_flatten/p3"
-  }  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p4"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p4"
-  top: "rpn_bbox_pred_flatten/p4"
-  }  
-  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p5"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p5"
-  top: "rpn_bbox_pred_flatten/p5"
-  }  
-   layer {
-  name: "rpn_cls_prob_reshape_flatten/p6"
-  type: "Flatten"
-  bottom: "rpn_bbox_pred/p6"
-  top: "rpn_bbox_pred_flatten/p6"
-  }  
-layer {
-  name: "rpn_bbox_pred_concat"
-  type: "Concat"
-  bottom: "rpn_bbox_pred_flatten/p2"
-  bottom: "rpn_bbox_pred_flatten/p3"
-  bottom: "rpn_bbox_pred_flatten/p4"
-  bottom: "rpn_bbox_pred_flatten/p5"
-  bottom: "rpn_bbox_pred_flatten/p6"
-  top: "rpn_bbox_pred"
-  concat_param {
-    axis: 1
-  }
-}
-
+ 
 
 layer {
   name: 'proposal'
   type: 'Python'
-  bottom: 'rpn_cls_prob_reshape'
-  bottom: 'rpn_bbox_pred'
-  bottom: 'im_info'
-	bottom: 'p2'
-	bottom: 'p3'
-	bottom: 'p4'
-	bottom: 'p5'
-	bottom: 'p6'	
+    bottom: 'im_info'
+    bottom: 'rpn_bbox_pred/p2'
+    bottom: 'rpn_bbox_pred/p3'
+	bottom: 'rpn_bbox_pred/p4'
+	bottom: 'rpn_bbox_pred/p5'
+	bottom: 'rpn_bbox_pred/p6'
+ 	bottom: 'fpn_out_reshape/p2'
+	bottom: 'fpn_out_reshape/p3'
+	bottom: 'fpn_out_reshape/p4'
+	bottom: 'fpn_out_reshape/p5'
+	bottom: 'fpn_out_reshape/p6'
   top: 'rpn_rois'
   python_param {
     module: 'rpn.proposal_layer'
@@ -3988,7 +3871,7 @@ layer {
   bottom: "labels"
   propagate_down: 1
   propagate_down: 0
-  top: "loss_cls"
+  top: "RcnnLossCls"
   loss_weight: 1
 	loss_param{
   ignore_label: -1
@@ -4002,16 +3885,6 @@ layer {
   bottom: "bbox_targets"
   bottom: "bbox_inside_weights"
   bottom: "bbox_outside_weights"
-  top: "loss_bbox"
+  top: "RcnnLossBBox"
   loss_weight: 1
 }
-
-
-
-
-
-
-
-
-
-

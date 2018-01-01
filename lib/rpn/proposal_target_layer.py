@@ -35,9 +35,9 @@ def vis_all_detection(im_array, detections, class_names, scale):
     a = np.array(a)
     im = transform_inverse(im_array,a)
     plt.imshow(im)
-    for j in range(len(class_names)):
-        if class_names[j] == 0:
-            continue
+    for j in range(detections.shape[0]):
+        # if class_names[j] == 0:
+        #     continue
         color = (random.random(), random.random(), random.random())  # generate a random color
         dets = detections[j]
         det =dets
@@ -48,9 +48,9 @@ def vis_all_detection(im_array, detections, class_names, scale):
                                  bbox[3] - bbox[1], fill=False,
                                  edgecolor=color, linewidth=3.5)
         plt.gca().add_patch(rect)
-        plt.gca().text(bbox[0], bbox[1] - 2,
-                           '{:s} {:.3f}'.format(str(class_names[j]), score),
-                           bbox=dict(facecolor=color, alpha=0.5), fontsize=12, color='white')
+        # plt.gca().text(bbox[0], bbox[1] - 2,
+        #                    '{:s} {:.3f}'.format(str(class_names[j]), score),
+        #                    bbox=dict(facecolor=color, alpha=0.5), fontsize=12, color='white')
     plt.show()
     name = np.mean(im)
     savefig ('vis/'+str(name)+'.png')
@@ -110,6 +110,7 @@ class ProposalTargetLayer(caffe.Layer):
         # Proposal ROIs (0, x1, y1, x2, y2) coming from RPN
         # (i.e., rpn.proposal_layer.ProposalLayer), or any other source
         all_rois = bottom[0].data
+        aaa = all_rois[:]
         # GT boxes (x1, y1, x2, y2, label)
         # TODO(rbg): it's annoying that sometimes I have extra info before
         # and other times after box coordinates -- normalize to one format
@@ -128,7 +129,7 @@ class ProposalTargetLayer(caffe.Layer):
         rois, labels, bbox_targets, bbox_weights ,layer_indexs = _sample_rois(
             all_rois, gt_boxes, fg_rois_per_image,
             rois_per_image, self._num_classes,sample_type='fpn', k0 = 4)
-        vis = False
+        vis =False
         if vis:
             ind = np.where(labels!=0)[0]
             im_shape = im.shape
@@ -150,8 +151,8 @@ class ProposalTargetLayer(caffe.Layer):
             r_ =  np.vstack(r)
 
       #  Optionally normalize targets by a precomputed mean and stdev
-        
-            vis_all_detection(im, r_, l, 1)
+
+            vis_all_detection(im, aaa[:,1:], l, 1)
 
         rois_ = np.zeros((self._batch_rois*4, 5), dtype=rois.dtype)
         labels_all = np.ones((self._batch_rois*4, ), dtype=labels.dtype)*-1
@@ -161,6 +162,7 @@ class ProposalTargetLayer(caffe.Layer):
         for i in range(4):
             index = (layer_indexs == (i + 2))
             num_index = sum(index)
+           
             start = self._batch_rois*i
             end = start+num_index
             index_range = range(start, end)
