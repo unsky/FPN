@@ -50,7 +50,7 @@ echo Logging output to "$LOG"
 
 time ./tools/train_net.py --gpu ${GPU_ID} \
   --solver models/${PT_DIR}/${NET}/FP_Net_end2end/solver.prototxt \
-  --weights output/FP_Net_end2end/voc_2007_trainval/fpn_iter_10000.caffemodel \
+  --weights data/pretrained_model/ResNet50.v2.caffemodel \
   --imdb ${TRAIN_IMDB} \
   --iters ${ITERS} \
   --cfg experiments/cfgs/FP_Net_end2end.yml \
