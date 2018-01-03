@@ -28,7 +28,10 @@ but the voc dataset has so many `[128,256,512]`targets.
 So, we desgin the anchor setting:`Ratios： [0.5,1,2],scales :[8,16]`, this is very import for voc dataset.
 
 # usage
-download  voc07,12 dataset `ResNet50.caffemodel` 
+download  voc07,12 dataset `ResNet50.caffemodel` and rename to `ResNet50.v2.caffemodel`
+```bash
+cp ResNet50.v2.caffemodel data/pretrained_model/
+```
 - OneDrive download: [link](https://onedrive.live.com/?authkey=%21AAFW2-FVoxeVRck&id=4006CBB8476FF777%2117887&cid=4006CBB8476FF777)
 ### compile  caffe & lib
 ```bash
@@ -41,7 +44,7 @@ cd lib
 make 
 ```
 ### train & test
-```
+```bash
 ./experiments/scripts/FP_Net_end2end.sh 1 FPN pascal_voc
 ./test.sh 1 FPN pascal_voc
 ```
