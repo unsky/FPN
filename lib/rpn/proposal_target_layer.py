@@ -176,7 +176,8 @@ class ProposalTargetLayer(caffe.Layer):
         rois_p2 = rois_all[0]
         rois_p3 = rois_all[1]
         rois_p4 = rois_all[2]
-        rois_p5 = rois_all[3]       
+        rois_p5 = rois_all[3]    
+  
 
 
         top[0].reshape(*rois_p2.shape)

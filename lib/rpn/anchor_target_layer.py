@@ -84,11 +84,9 @@ class AnchorTargetLayer(caffe.Layer):
         fpn_inds_inside = []
         for feat_id in range(len(feat_strides)):
             # len(scales.shape) == 1 just for backward compatibility, will remove in the future
-            if len(scales.shape) == 1:
-                base_anchors = generate_anchors(base_size=feat_strides[feat_id], ratios=ratios, scales=scales)
-            else:
-                assert len(scales.shape) == len(ratios.shape) == 2
-                base_anchors = generate_anchors(base_size=feat_strides[feat_id], ratios=ratios[feat_id], scales=scales[feat_id])
+        
+            base_anchors = generate_anchors(base_size=feat_strides[feat_id], ratios=ratios, scales=scales)
+
             num_anchors = base_anchors.shape[0]
             feat_height = h[feat_id]
             feat_width = w[feat_id]
@@ -150,7 +148,6 @@ class AnchorTargetLayer(caffe.Layer):
                 fpn_labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
         else:
             fpn_labels[:] = 0
-
         # subsample positive labels if we have too many
         num_fg = fpn_labels.shape[0] if cfg.TRAIN.RPN_BATCHSIZE == -1 else int(cfg.TRAIN.RPN_FG_FRACTION * cfg.TRAIN.RPN_BATCHSIZE)
         fg_inds = np.where(fpn_labels >= 1)[0]
@@ -240,7 +237,7 @@ class AnchorTargetLayer(caffe.Layer):
         bbox_targets = np.concatenate(bbox_target_list, axis=2)
         bbox_inside_weights =  np.concatenate(bbox_weight_list, axis=2)
         bbox_outside_weights = np.concatenate(bbox_outside_weight_list, axis=2)
-      #  print len(labels[labels>=1])
+
         # print bbox_targets.shape
         # print bbox_inside_weights.shape
         # print bbox_outside_weights.shape

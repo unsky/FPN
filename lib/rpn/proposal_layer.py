@@ -71,9 +71,10 @@ class ProposalLayer(caffe.Layer):
         
         self._feat_stride = [int(i) for i in layer_params['feat_stride'].split(',')]
         self._scales = cfg.FPNRSCALES
+    
         self._ratios = cfg.FPNRATIOS
         self._min_sizes = 16
-        self._num_anchors = 3
+        self._num_anchors = len(self._scales)*len(self._ratios)
         self._output_score = False
 
 
@@ -121,14 +122,12 @@ class ProposalLayer(caffe.Layer):
             'stride4': bottom[1].data,
         }
       
-
-
-
         proposal_list = []
         score_list = []
         for s in self._feat_stride:
             stride = int(s)
             sub_anchors = generate_anchors(base_size=stride, scales=self._scales, ratios=self._ratios)
+    
             scores = cls_prob_dict['stride' + str(s)][:, self._num_anchors:, :, :]
             bbox_deltas = bbox_pred_dict['stride' + str(s)]
           
@@ -150,6 +149,7 @@ class ProposalLayer(caffe.Layer):
             # reshape to (K*A, 4) shifted anchors
             A = self._num_anchors
             K = shifts.shape[0]
+    
             anchors = sub_anchors.reshape((1, A, 4)) + shifts.reshape((1, K, 4)).transpose((1, 0, 2))
             anchors = anchors.reshape((K * A, 4))
 

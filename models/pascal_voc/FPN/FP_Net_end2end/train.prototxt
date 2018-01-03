@@ -2588,7 +2588,7 @@ layer {
  		name: "rpn_cls_score_b"
         }
   convolution_param {
-    num_output: 6   # 2(bg/fg) * 9(anchors)
+    num_output: 12   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -2607,7 +2607,7 @@ layer {
   name: "rpn_bbox_pred_b"
   }
   convolution_param {
-    num_output: 12   # 4 * 9(anchors)
+    num_output: 24   # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -2659,7 +2659,7 @@ layer {
    top: "fpn_out_reshape/p2"
    name: "fpn_out_reshape/p2"
    type: "Reshape"
-   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
+   reshape_param { shape {dim: 0 dim: 12 dim: -1 dim: 0  } }
 }
 
 
@@ -2702,7 +2702,7 @@ layer {
     name: "rpn_cls_score_b"
     }
   convolution_param {
-    num_output: 6   # 2(bg/fg) * 9(anchors)
+    num_output: 12   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.001 }
     bias_filler { type: "constant" value: 0 }
@@ -2721,7 +2721,7 @@ layer {
    name:"rpn_bbox_pred_b" 
   }
   convolution_param {
-    num_output: 12   # 4 * 9(anchors)
+    num_output: 24   # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.001 }
     bias_filler { type: "constant" value: 0 }
@@ -2773,7 +2773,7 @@ layer {
    top: "fpn_out_reshape/p3"
    name: "fpn_out_reshape/p3"
    type: "Reshape"
-   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
+   reshape_param { shape {dim: 0 dim: 12 dim: -1 dim: 0  } }
 }
 
 
@@ -2817,7 +2817,7 @@ layer {
   name:"rpn_cls_score_b"
     }
   convolution_param {
-    num_output: 6   # 2(bg/fg) * 9(anchors)
+    num_output: 12   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.001 }
     bias_filler { type: "constant" value: 0 }
@@ -2836,7 +2836,7 @@ layer {
     name:"rpn_bbox_pred_b"
   }
   convolution_param {
-    num_output: 12   # 4 * 9(anchors)
+    num_output: 24   # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.001 }
     bias_filler { type: "constant" value: 0 }
@@ -2888,7 +2888,7 @@ layer {
    top: "fpn_out_reshape/p4"
    name: "fpn_out_reshape/p4"
    type: "Reshape"
-   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
+   reshape_param { shape {dim: 0 dim: 12 dim: -1 dim: 0  } }
 }
 
 
@@ -2934,7 +2934,7 @@ layer {
   name:"rpn_cls_score_b"
   }
   convolution_param {
-    num_output: 6   # 2(bg/fg) * 9(anchors)
+    num_output: 12   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -2953,7 +2953,7 @@ layer {
     name:"rpn_bbox_pred_b"
     }
   convolution_param {
-    num_output: 12  # 4 * 9(anchors)
+    num_output: 24  # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -3005,7 +3005,7 @@ layer {
    top: "fpn_out_reshape/p5"
    name: "fpn_out_reshape/p5"
    type: "Reshape"
-   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
+   reshape_param { shape {dim: 0 dim: 12 dim: -1 dim: 0  } }
 }
 
 #========= RPN/p6 ============
@@ -3048,7 +3048,7 @@ layer {
   name:"rpn_cls_score_b"
   }
   convolution_param {
-    num_output: 6   # 2(bg/fg) * 9(anchors)
+    num_output: 12   # 2(bg/fg) * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -3067,7 +3067,7 @@ layer {
     name:"rpn_bbox_pred_b"
     }
   convolution_param {
-    num_output: 12  # 4 * 9(anchors)
+    num_output: 24  # 4 * 9(anchors)
     kernel_size: 1 pad: 0 stride: 1
     weight_filler { type: "gaussian" std: 0.01 }
     bias_filler { type: "constant" value: 0 }
@@ -3120,7 +3120,7 @@ layer {
    top: "fpn_out_reshape/p6"
    name: "fpn_out_reshape/p6"
    type: "Reshape"
-   reshape_param { shape {dim: 0 dim: 6 dim: -1 dim: 0  } }
+   reshape_param { shape {dim: 0 dim: 12 dim: -1 dim: 0  } }
 }
 
 ########rpn loss#####################

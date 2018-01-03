@@ -115,6 +115,66 @@ def _get_blobs(im, rois):
         blobs['rois'] = _get_rois_blob(rois, im_scale_factors)
     return blobs, im_scale_factors
 
+def transform_inverse(im_tensor, pixel_means):
+    """
+    transform from mxnet im_tensor to ordinary RGB image
+    im_tensor is limited to one image
+    :param im_tensor: [batch, channel, height, width]
+    :param pixel_means: [B, G, R pixel means]
+    :return: im [height, width, channel(RGB)]
+    """
+    assert im_tensor.shape[0] == 1
+    im_tensor = im_tensor.copy()
+    # put channel back
+    channel_swap = (0, 2, 3, 1)
+    im_tensor = im_tensor.transpose(channel_swap)
+    im = im_tensor[0]
+    assert im.shape[2] == 3
+    im += pixel_means[[2, 1, 0]]
+    im = im.astype(np.uint8)
+    return im
+
+def vis_rois_detection(im_array, detections):
+    """
+    visualize all detections in one image
+    :param im_array: [b=1 c h w] in rgb
+    :param detections: [ numpy.ndarray([[x1 y1 x2 y2 score]]) for j in classes ]
+    :param class_names: list of names in imdb
+    :param scale: visualize the scaled image
+    :return:
+    """
+    import matplotlib  
+    matplotlib.use('Agg') 
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import savefig  
+    import random
+    a =  [103.06 ,115.9 ,123.15]
+    a = np.array(a)
+    im = transform_inverse(im_array,a)
+    plt.imshow(im)
+  #  print class_names.shape
+    for j in range(detections.shape[0]):
+
+        color = (random.random(), random.random(), random.random())  # generate a random color
+        dets = detections[j]
+     
+        det =dets
+
+        bbox = det[0:] 
+ 
+        rect = plt.Rectangle((bbox[0], bbox[1]),
+                                 bbox[2] - bbox[0],
+                                 bbox[3] - bbox[1], fill=False,
+                                 edgecolor=color, linewidth=3.5)
+        plt.gca().add_patch(rect)
+    plt.show()
+    name = np.mean(im)
+    savefig ('vis/'+str(name)+'.png')
+    plt.clf()
+    plt.cla()
+
+    plt. close(0)
+
 def im_detect(net, im, boxes=None,num_classes=21):
     """Detect object classes in an image given object proposals.
 
@@ -171,9 +231,9 @@ def im_detect(net, im, boxes=None,num_classes=21):
         # unscale back to raw image space
         boxes = rois[:, 1:5] 
         index= np.where(np.sum(boxes,axis=1)!=0)[0]
-        boxes = boxes[index,:]/ im_scales[0]
+        boxes = boxes[index,:]
      
-
+# / im_scales[0]
     if cfg.TEST.SVM:
         # use the raw scores before softmax under the assumption they
         # were trained as linear SVMs
@@ -190,6 +250,7 @@ def im_detect(net, im, boxes=None,num_classes=21):
         box_deltas = blobs_out['bbox_pred']
     
         box_deltas = box_deltas[index,:]
+     
 
         if cfg.TRAIN.BBOX_NORMALIZE_TARGETS_PRECOMPUTED:
             means = np.tile(
@@ -198,11 +259,13 @@ def im_detect(net, im, boxes=None,num_classes=21):
                     np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (num_classes, 1)).ravel()
       #  Optionally normalize targets by a precomputed mean and stdev
             box_deltas = box_deltas * stds + means
-           
+        
 
       #  print boxes.shape,box_deltas.shape
         pred_boxes = bbox_transform_inv(boxes, box_deltas)
-        pred_boxes = clip_boxes(pred_boxes, im.shape)
+        s = (blobs['data'].astype(np.float32, copy=False).shape[2],blobs['data'].astype(np.float32, copy=False).shape[3],blobs['data'].astype(np.float32, copy=False).shape[1])
+ 
+        pred_boxes = clip_boxes(pred_boxes, s)
     else:
         # Simply repeat the boxes, once for each class
         pred_boxes = np.tile(boxes, (1, scores.shape[1]))
@@ -211,9 +274,13 @@ def im_detect(net, im, boxes=None,num_classes=21):
         # Map scores and predictions back to the original set of boxes
         scores = scores[inv_index, :]
         pred_boxes = pred_boxes[inv_index, :]
+
+    vis = False
+    if vis:
+        vis_rois_detection(blobs['data'].astype(np.float32, copy=False),pred_boxes/ im_scales[0])
   
 
-    return scores, pred_boxes
+    return scores, pred_boxes/ im_scales[0]
 
 def vis_detections(im, class_name, dets, thresh=0.3):
     """Visual debugging of detections."""
@@ -313,15 +380,15 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
                         y1 = bboxj[3]
                         x2 = bboxj[2]
                         y2 = bboxj[1]
-                        if x1 < 0:
-                            x1=0
-                        if y1> imj.shape[1]:
-                            y1=imj.shape[1]-1
-                        if x2 > imj.shape[0]:
-                            x2 = imj.shape[0]-1
-                        if y2 < 0:
-                            y2 = 0
-                        if scorej > thresh:
+                        # if x1 < 0:
+                        #     x1=0
+                        # if y1> imj.shape[1]:
+                        #     y1=imj.shape[1]-1
+                        # if x2 > imj.shape[0]:
+                        #     x2 = imj.shape[0]-1
+                        # if y2 < 0:
+                        #     y2 = 0
+                        if scorej > 0.1:
                             cv2.rectangle(imj, (x1, y1), (x2,y2),(0,255,0), 4)
                             text = str(jj) + ": " + str(scorej)
                             font = cv2.FONT_HERSHEY_SIMPLEX

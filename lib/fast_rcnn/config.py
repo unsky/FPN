@@ -41,7 +41,7 @@ __C.TRAIN.SCALES = (768,)
 
 __C.TRAIN.IMAGE_STRIDE = 64
 __C.FPNRATIOS = [0.5,1,2]
-__C.FPNRSCALES = 2 ** np.arange(3,4)
+__C.FPNRSCALES = 2 ** np.arange(4,6)
 
 
 
@@ -63,7 +63,7 @@ __C.TRAIN.FG_THRESH = 0.5
 # Overlap threshold for a ROI to be considered background (class = 0 if
 # overlap in [LO, HI))
 __C.TRAIN.BG_THRESH_HI = 0.5
-__C.TRAIN.BG_THRESH_LO = 0.001
+__C.TRAIN.BG_THRESH_LO = 0.0
 
 # Use horizontally-flipped images during training?
 __C.TRAIN.USE_FLIPPED = True
