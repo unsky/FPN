@@ -1,3 +1,0 @@
-[TYPECHECK]
-
-ignored-modules = numpy, numpy.random, cv2
