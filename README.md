@@ -2,8 +2,6 @@ Feature Pyramid Network on caffe
 
 This is the unoffical version  Feature Pyramid Network for Feature Pyramid Networks for Object Detection https://arxiv.org/abs/1612.03144
 
-
-the mxnet unoffical version  Feature Pyramid Network: https://github.com/unsky/Feature-Pyramid-Networks 
 # results
 `FPN(resnet50) result is implemented without OHEM and train with pascal voc 2007 + 2012 test on 2007`
 
@@ -48,6 +46,11 @@ make
 ./experiments/scripts/FP_Net_end2end.sh 1 FPN pascal_voc
 ./test.sh 1 FPN pascal_voc
 ```
+
+### TODO List
+ - [x] all tests passed
+ - [x] evaluate  object detection  performance on voc
+ 
 ### feature pyramid networks for object detection
 
 Lin, T. Y., Dollár, P., Girshick, R., He, K., Hariharan, B., & Belongie, S. (2016). Feature pyramid networks for object detection. arXiv preprint arXiv:1612.03144.
