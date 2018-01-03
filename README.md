@@ -19,7 +19,7 @@ This is the unoffical version  Feature Pyramid Network for Feature Pyramid Netwo
 # about the anchor size setting
 In the paper the anchor setting is `Ratios： [0.5,1,2],scales :[8,]`
 
-With the setting and P2~P6, all anchor is `[32,64,128,512,1024]`,but this setting is suit for COCO dataset which has so many small targets.
+With the setting and P2~P6, all anchor sizes are  `[32,64,128,512,1024]`,but this setting is suit for COCO dataset which has so many small targets.
 
 but the voc dataset has so many `[128,256,512]`targets.
 
