@@ -34,7 +34,7 @@ cp ResNet50.v2.caffemodel data/pretrained_model/
 - OneDrive download: [link](https://onedrive.live.com/?authkey=%21AAFW2-FVoxeVRck&id=4006CBB8476FF777%2117887&cid=4006CBB8476FF777)
 
 `In my expriments, the codes require ~10G GPU memory in training and ~6G in testing. 
-your can design the suit image sizes and mimbatch size and rcnn batch size for your GPUS.`
+your can design the suit image size, mimbatch size and rcnn batch size for your GPUS.`
 ### compile  caffe & lib
 ```bash
 cd caffe-fpn
