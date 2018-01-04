@@ -3,16 +3,16 @@ Feature Pyramid Network on caffe
 This is the unoffical version  Feature Pyramid Network for Feature Pyramid Networks for Object Detection https://arxiv.org/abs/1612.03144
 
 # results
-`FPN(resnet50) result is implemented without OHEM and train with pascal voc 2007 + 2012 test on 2007`
+`FPN(resnet50)-end2end result is implemented without OHEM and train with pascal voc 2007 + 2012 test on 2007`
 
 
 |mAP@0.5|aeroplane|bicycle|bird|boat|bottle|bus|car|cat|chair|cow|
 |:--:|:-------:| -----:| --:| --:|-----:|--:|--:|--:|----:|--:|
-
+|0.7833|0.8585| 0.8001| 0.7970| 0.7174|0.6522|0.8668|0.8768|0.8929|0.5842|0.8658|
 
 |diningtable|dog |horse|motorbike|person |pottedplant|sheep|sofa|train|tv|
 |----------:|:--:|:---:| -------:| -----:| -------:|----:|---:|----:|--:|
-
+|0.7022|0.8891|0.8680| 0.7991| 0.7944| 0.5065|0.7896|0.7707|0.8697|0.7653|
 # framework
 ![](framework.png)
 `the red and yellow are shared params`

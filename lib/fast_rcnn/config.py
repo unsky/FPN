@@ -170,6 +170,9 @@ __C.TEST.RPN_PRE_NMS_TOP_N = 6000
 __C.TEST.RPN_POST_NMS_TOP_N = 1000
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
 __C.TEST.RPN_MIN_SIZE = 16
+# Apply box scoring heuristics
+__C.TEST.BBOX_VOTE_N_WEIGHTED_SCORE = 1
+__C.TEST.BBOX_VOTE_WEIGHT_EMPTY = 0.5
 
 
 #
