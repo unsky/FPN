@@ -21,7 +21,7 @@ In the paper the anchor setting is `Ratios： [0.5,1,2],scales :[8,]`
 
 With the setting and P2~P6, all anchor sizes are  `[32,64,128,512,1024]`,but this setting is suit for COCO dataset which has so many small targets.
 
-but the voc dataset has so many `[128,256,512]`targets.
+But the voc dataset targets are range `[128,256,512]`.
 
 So, we desgin the anchor setting:`Ratios： [0.5,1,2],scales :[8,16]`, this is very import for voc dataset.
 
