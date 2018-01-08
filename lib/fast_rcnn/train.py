@@ -61,48 +61,7 @@ class SolverWrapper(object):
         """
         net = self.solver.net
 
-        scale_bbox_params = (cfg.TRAIN.BBOX_REG and
-                             cfg.TRAIN.BBOX_NORMALIZE_TARGETS and
-                             net.params.has_key('bbox_pred'))
      
-        if scale_bbox_params:
-            print "------------"
-            # save original values
-            orig_0_h2 = net.params['bbox_pred/h2'][0].data.copy()
-            orig_1_h2 = net.params['bbox_pred/h2'][1].data.copy()     
-
-            orig_0_h3 = net.params['bbox_pred/h3'][0].data.copy()
-            orig_1_h3 = net.params['bbox_pred/h3'][1].data.copy()
-            orig_0_h4 = net.params['bbox_pred/h4'][0].data.copy()
-            orig_1_h4 = net.params['bbox_pred/h4'][1].data.copy()
-            orig_0_h5 = net.params['bbox_pred/h5'][0].data.copy()
-            orig_1_h5 = net.params['bbox_pred/h5'][1].data.copy()
-
-            # scale and shift with bbox reg unnormalization; then save snapshot
-            net.params['bbox_pred/h2'][0].data[...] = \
-                    (net.params['bbox_pred/h2'][0].data *
-                     self.bbox_stds[:, np.newaxis])
-            net.params['bbox_pred/h2'][1].data[...] = \
-                    (net.params['bbox_pred/h2'][1].data *
-                     self.bbox_stds + self.bbox_means)
-            net.params['bbox_pred/h3'][0].data[...] = \
-                    (net.params['bbox_pred/h3'][0].data *
-                     self.bbox_stds[:, np.newaxis])
-            net.params['bbox_pred/h3'][1].data[...] = \
-                    (net.params['bbox_pred/h3'][1].data *
-                     self.bbox_stds + self.bbox_means)
-            net.params['bbox_pred/h4'][0].data[...] = \
-                    (net.params['bbox_pred/h4'][0].data *
-                     self.bbox_stds[:, np.newaxis])
-            net.params['bbox_pred/h4'][1].data[...] = \
-                    (net.params['bbox_pred/h4'][1].data *
-                     self.bbox_stds + self.bbox_means)
-            net.params['bbox_pred/h5'][0].data[...] = \
-                    (net.params['bbox_pred/h5'][0].data *
-                     self.bbox_stds[:, np.newaxis])
-            net.params['bbox_pred/h5'][1].data[...] = \
-                    (net.params['bbox_pred/h5'][1].data *
-                     self.bbox_stds + self.bbox_means)
 
         infix = ('_' + cfg.TRAIN.SNAPSHOT_INFIX
                  if cfg.TRAIN.SNAPSHOT_INFIX != '' else '')
@@ -113,16 +72,7 @@ class SolverWrapper(object):
         net.save(str(filename))
         print 'Wrote snapshot to: {:s}'.format(filename)
 
-        if scale_bbox_params:
-            # restore net to original state
-            net.params['bbox_pred/h2'][0].data[...] = orig_0_h2
-            net.params['bbox_pred/h2'][1].data[...] = orig_1_h2
-            net.params['bbox_pred/h3'][0].data[...] = orig_0_h3
-            net.params['bbox_pred/h3'][1].data[...] = orig_1_h3
-            net.params['bbox_pred/h4'][0].data[...] = orig_0_h4
-            net.params['bbox_pred/h4'][1].data[...] = orig_1_h4
-            net.params['bbox_pred/h5'][0].data[...] = orig_0_h5
-            net.params['bbox_pred/h5'][1].data[...] = orig_1_h5
+ 
         return filename
 
     def train_model(self, max_iters):
