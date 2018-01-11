@@ -208,6 +208,22 @@ class ProposalLayer(caffe.Layer):
         if len(keep) < post_nms_topN:
             pad = npr.choice(keep, size=post_nms_topN - len(keep))
             keep = np.hstack((keep, pad))
+
+        # pad to ensure output size remains unchanged
+        if len(keep) < post_nms_topN:
+            try:
+                pad = npr.choice(keep, size=post_nms_topN - len(keep))
+            except:
+                proposals = np.zeros((post_nms_topN, 4), dtype=np.float32)
+                proposals[:,2] = 16
+                proposals[:,3] = 16
+                batch_inds = np.zeros((proposals.shape[0], 1), dtype=np.float32)
+                blob = np.hstack((batch_inds, proposals.astype(np.float32, copy=False)))
+                top[0].reshape(*(blob.shape))
+                top[0].data[...] = blob
+                return      
+            keep = np.hstack((keep, pad))
+           
         proposals = proposals[keep, :]
         scores = scores[keep]
 
