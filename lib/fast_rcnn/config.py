@@ -97,7 +97,7 @@ __C.TRAIN.BBOX_NORMALIZE_MEANS = (0.0, 0.0, 0.0, 0.0)
 __C.TRAIN.BBOX_NORMALIZE_STDS = (0.1, 0.1, 0.2, 0.2)
 
 # Train using these proposals
-__C.TRAIN.PROPOSAL_METHOD = 'selective_search'
+__C.TRAIN.PROPOSAL_METHOD = 'gt'
 
 # Make minibatches from images that have similar aspect ratios (i.e. both
 # tall and thin or both short and wide) in order to avoid wasting computation
