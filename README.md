@@ -33,7 +33,7 @@ Network view: [link](http://ethereon.github.io/netscope/#/gist/c5334efdd667ce41d
 
 shared rcnn
 
-Network view: [link](http://ethereon.github.io/netscope/#/gist/c5334efdd667ce41d540e3697de2936c)
+Network view: [link](http://ethereon.github.io/netscope/#/gist/63c0281751afd1b2d50f4c2764b31a4e)
 
 ![](framework.png)
 `the red and yellow are shared params`
