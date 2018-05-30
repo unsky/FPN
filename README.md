@@ -28,9 +28,13 @@ shared rcnn
 # framework
 megred rcnn framework
 Network view: [link](http://ethereon.github.io/netscope/#/gist/c5334efdd667ce41d540e3697de2936c)
+
 ![](merge_rcnn_framework.png)
+
 shared rcnn
+
 Network view: [link](http://ethereon.github.io/netscope/#/gist/c5334efdd667ce41d540e3697de2936c)
+
 ![](framework.png)
 `the red and yellow are shared params`
 # about the anchor size setting
