@@ -28,13 +28,13 @@ shared rcnn
 # framework
 megred rcnn framework
 
-Network view: [link](http://ethereon.github.io/netscope/#/gist/c5334efdd667ce41d540e3697de2936c)
+Network overview: [link](http://ethereon.github.io/netscope/#/gist/c5334efdd667ce41d540e3697de2936c)
 
 ![](merge_rcnn_framework.png)
 
 shared rcnn
 
-Network view: [link](http://ethereon.github.io/netscope/#/gist/63c0281751afd1b2d50f4c2764b31a4e)
+Network overview: [link](http://ethereon.github.io/netscope/#/gist/63c0281751afd1b2d50f4c2764b31a4e)
 
 ![](framework.png)
 `the red and yellow are shared params`
